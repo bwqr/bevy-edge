@@ -1,0 +1,635 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		84B8E7F528FB25FE00545E7E /* BevyEdgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8E7F428FB25FE00545E7E /* BevyEdgeApp.swift */; };
+		84B8E7F728FB25FF00545E7E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8E7F628FB25FF00545E7E /* ContentView.swift */; };
+		84B8E7F928FB260000545E7E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 84B8E7F828FB260000545E7E /* Assets.xcassets */; };
+		84B8E7FD28FB260000545E7E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 84B8E7FC28FB260000545E7E /* Preview Assets.xcassets */; };
+		84B8E80728FB260100545E7E /* BevyEdgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8E80628FB260100545E7E /* BevyEdgeTests.swift */; };
+		84B8E81128FB260100545E7E /* BevyEdgeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8E81028FB260100545E7E /* BevyEdgeUITests.swift */; };
+		84B8E81328FB260100545E7E /* BevyEdgeUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8E81228FB260100545E7E /* BevyEdgeUITestsLaunchTests.swift */; };
+		84B8E82128FB290800545E7E /* libbevyedge.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 84B8E82028FB28FB00545E7E /* libbevyedge.a */; };
+		84B8E82328FB292B00545E7E /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B8E82228FB292B00545E7E /* Input.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		84B8E80328FB260100545E7E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 84B8E7E928FB25FE00545E7E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 84B8E7F028FB25FE00545E7E;
+			remoteInfo = BevyEdge;
+		};
+		84B8E80D28FB260100545E7E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 84B8E7E928FB25FE00545E7E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 84B8E7F028FB25FE00545E7E;
+			remoteInfo = BevyEdge;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		84B8E7F128FB25FE00545E7E /* BevyEdge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BevyEdge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		84B8E7F428FB25FE00545E7E /* BevyEdgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BevyEdgeApp.swift; sourceTree = "<group>"; };
+		84B8E7F628FB25FF00545E7E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		84B8E7F828FB260000545E7E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		84B8E7FA28FB260000545E7E /* BevyEdge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BevyEdge.entitlements; sourceTree = "<group>"; };
+		84B8E7FC28FB260000545E7E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		84B8E80228FB260100545E7E /* BevyEdgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BevyEdgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		84B8E80628FB260100545E7E /* BevyEdgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BevyEdgeTests.swift; sourceTree = "<group>"; };
+		84B8E80C28FB260100545E7E /* BevyEdgeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BevyEdgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		84B8E81028FB260100545E7E /* BevyEdgeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BevyEdgeUITests.swift; sourceTree = "<group>"; };
+		84B8E81228FB260100545E7E /* BevyEdgeUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BevyEdgeUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		84B8E82028FB28FB00545E7E /* libbevyedge.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbevyedge.a; path = "../../../Users/eerie/projects/tmp/bevy-edge/x86_64-apple-ios/debug/libbevyedge.a"; sourceTree = "<group>"; };
+		84B8E82228FB292B00545E7E /* Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		84B8E7EE28FB25FE00545E7E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84B8E82128FB290800545E7E /* libbevyedge.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84B8E7FF28FB260100545E7E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84B8E80928FB260100545E7E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		84B8E7E828FB25FE00545E7E = {
+			isa = PBXGroup;
+			children = (
+				84B8E7F328FB25FE00545E7E /* BevyEdge */,
+				84B8E80528FB260100545E7E /* BevyEdgeTests */,
+				84B8E80F28FB260100545E7E /* BevyEdgeUITests */,
+				84B8E7F228FB25FE00545E7E /* Products */,
+				84B8E81F28FB28FB00545E7E /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		84B8E7F228FB25FE00545E7E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				84B8E7F128FB25FE00545E7E /* BevyEdge.app */,
+				84B8E80228FB260100545E7E /* BevyEdgeTests.xctest */,
+				84B8E80C28FB260100545E7E /* BevyEdgeUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		84B8E7F328FB25FE00545E7E /* BevyEdge */ = {
+			isa = PBXGroup;
+			children = (
+				84B8E7F428FB25FE00545E7E /* BevyEdgeApp.swift */,
+				84B8E7F628FB25FF00545E7E /* ContentView.swift */,
+				84B8E7F828FB260000545E7E /* Assets.xcassets */,
+				84B8E7FA28FB260000545E7E /* BevyEdge.entitlements */,
+				84B8E7FB28FB260000545E7E /* Preview Content */,
+				84B8E82228FB292B00545E7E /* Input.swift */,
+			);
+			path = BevyEdge;
+			sourceTree = "<group>";
+		};
+		84B8E7FB28FB260000545E7E /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				84B8E7FC28FB260000545E7E /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		84B8E80528FB260100545E7E /* BevyEdgeTests */ = {
+			isa = PBXGroup;
+			children = (
+				84B8E80628FB260100545E7E /* BevyEdgeTests.swift */,
+			);
+			path = BevyEdgeTests;
+			sourceTree = "<group>";
+		};
+		84B8E80F28FB260100545E7E /* BevyEdgeUITests */ = {
+			isa = PBXGroup;
+			children = (
+				84B8E81028FB260100545E7E /* BevyEdgeUITests.swift */,
+				84B8E81228FB260100545E7E /* BevyEdgeUITestsLaunchTests.swift */,
+			);
+			path = BevyEdgeUITests;
+			sourceTree = "<group>";
+		};
+		84B8E81F28FB28FB00545E7E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				84B8E82028FB28FB00545E7E /* libbevyedge.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		84B8E7F028FB25FE00545E7E /* BevyEdge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 84B8E81628FB260100545E7E /* Build configuration list for PBXNativeTarget "BevyEdge" */;
+			buildPhases = (
+				84B8E7ED28FB25FE00545E7E /* Sources */,
+				84B8E7EE28FB25FE00545E7E /* Frameworks */,
+				84B8E7EF28FB25FE00545E7E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BevyEdge;
+			productName = BevyEdge;
+			productReference = 84B8E7F128FB25FE00545E7E /* BevyEdge.app */;
+			productType = "com.apple.product-type.application";
+		};
+		84B8E80128FB260100545E7E /* BevyEdgeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 84B8E81928FB260100545E7E /* Build configuration list for PBXNativeTarget "BevyEdgeTests" */;
+			buildPhases = (
+				84B8E7FE28FB260100545E7E /* Sources */,
+				84B8E7FF28FB260100545E7E /* Frameworks */,
+				84B8E80028FB260100545E7E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				84B8E80428FB260100545E7E /* PBXTargetDependency */,
+			);
+			name = BevyEdgeTests;
+			productName = BevyEdgeTests;
+			productReference = 84B8E80228FB260100545E7E /* BevyEdgeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		84B8E80B28FB260100545E7E /* BevyEdgeUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 84B8E81C28FB260100545E7E /* Build configuration list for PBXNativeTarget "BevyEdgeUITests" */;
+			buildPhases = (
+				84B8E80828FB260100545E7E /* Sources */,
+				84B8E80928FB260100545E7E /* Frameworks */,
+				84B8E80A28FB260100545E7E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				84B8E80E28FB260100545E7E /* PBXTargetDependency */,
+			);
+			name = BevyEdgeUITests;
+			productName = BevyEdgeUITests;
+			productReference = 84B8E80C28FB260100545E7E /* BevyEdgeUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		84B8E7E928FB25FE00545E7E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1400;
+				LastUpgradeCheck = 1400;
+				TargetAttributes = {
+					84B8E7F028FB25FE00545E7E = {
+						CreatedOnToolsVersion = 14.0;
+					};
+					84B8E80128FB260100545E7E = {
+						CreatedOnToolsVersion = 14.0;
+						TestTargetID = 84B8E7F028FB25FE00545E7E;
+					};
+					84B8E80B28FB260100545E7E = {
+						CreatedOnToolsVersion = 14.0;
+						TestTargetID = 84B8E7F028FB25FE00545E7E;
+					};
+				};
+			};
+			buildConfigurationList = 84B8E7EC28FB25FE00545E7E /* Build configuration list for PBXProject "BevyEdge" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 84B8E7E828FB25FE00545E7E;
+			productRefGroup = 84B8E7F228FB25FE00545E7E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				84B8E7F028FB25FE00545E7E /* BevyEdge */,
+				84B8E80128FB260100545E7E /* BevyEdgeTests */,
+				84B8E80B28FB260100545E7E /* BevyEdgeUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		84B8E7EF28FB25FE00545E7E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84B8E7FD28FB260000545E7E /* Preview Assets.xcassets in Resources */,
+				84B8E7F928FB260000545E7E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84B8E80028FB260100545E7E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84B8E80A28FB260100545E7E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		84B8E7ED28FB25FE00545E7E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84B8E82328FB292B00545E7E /* Input.swift in Sources */,
+				84B8E7F728FB25FF00545E7E /* ContentView.swift in Sources */,
+				84B8E7F528FB25FE00545E7E /* BevyEdgeApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84B8E7FE28FB260100545E7E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84B8E80728FB260100545E7E /* BevyEdgeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84B8E80828FB260100545E7E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84B8E81328FB260100545E7E /* BevyEdgeUITestsLaunchTests.swift in Sources */,
+				84B8E81128FB260100545E7E /* BevyEdgeUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		84B8E80428FB260100545E7E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 84B8E7F028FB25FE00545E7E /* BevyEdge */;
+			targetProxy = 84B8E80328FB260100545E7E /* PBXContainerItemProxy */;
+		};
+		84B8E80E28FB260100545E7E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 84B8E7F028FB25FE00545E7E /* BevyEdge */;
+			targetProxy = 84B8E80D28FB260100545E7E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		84B8E81428FB260100545E7E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		84B8E81528FB260100545E7E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		84B8E81728FB260100545E7E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BevyEdge/BevyEdge.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"BevyEdge/Preview Content\"";
+				DEVELOPMENT_TEAM = 2FQV425TS4;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "/Users/eerie/projects/tmp/bevy-edge/x86_64-apple-ios/debug";
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bwqr.BevyEdge;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = /Volumes/bevy/bevy/ios/src/bevyedge.h;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		84B8E81828FB260100545E7E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BevyEdge/BevyEdge.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"BevyEdge/Preview Content\"";
+				DEVELOPMENT_TEAM = 2FQV425TS4;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "/Users/eerie/projects/tmp/bevy-edge/x86_64-apple-ios/debug";
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bwqr.BevyEdge;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = /Volumes/bevy/bevy/ios/src/bevyedge.h;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		84B8E81A28FB260100545E7E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bwqr.BevyEdgeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BevyEdge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BevyEdge";
+			};
+			name = Debug;
+		};
+		84B8E81B28FB260100545E7E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bwqr.BevyEdgeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BevyEdge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BevyEdge";
+			};
+			name = Release;
+		};
+		84B8E81D28FB260100545E7E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bwqr.BevyEdgeUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = BevyEdge;
+			};
+			name = Debug;
+		};
+		84B8E81E28FB260100545E7E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bwqr.BevyEdgeUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = BevyEdge;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		84B8E7EC28FB25FE00545E7E /* Build configuration list for PBXProject "BevyEdge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				84B8E81428FB260100545E7E /* Debug */,
+				84B8E81528FB260100545E7E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		84B8E81628FB260100545E7E /* Build configuration list for PBXNativeTarget "BevyEdge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				84B8E81728FB260100545E7E /* Debug */,
+				84B8E81828FB260100545E7E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		84B8E81928FB260100545E7E /* Build configuration list for PBXNativeTarget "BevyEdgeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				84B8E81A28FB260100545E7E /* Debug */,
+				84B8E81B28FB260100545E7E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		84B8E81C28FB260100545E7E /* Build configuration list for PBXNativeTarget "BevyEdgeUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				84B8E81D28FB260100545E7E /* Debug */,
+				84B8E81E28FB260100545E7E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 84B8E7E928FB25FE00545E7E /* Project object */;
+}
