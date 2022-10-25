@@ -14,7 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import com.bwqr.bevyedge.theme.BevyEdgeTheme
 
+private var BevyedgeInitted = false
+
 private fun init() {
+    if (BevyedgeInitted) {
+        return
+    }
+
+    BevyedgeInitted = true
+
     System.loadLibrary("bevyedge")
     Input.init()
 }

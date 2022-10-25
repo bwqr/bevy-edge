@@ -3,7 +3,7 @@ use std::{net::SocketAddrV4, io::Write};
 use bevy_app::{Plugin, CoreStage};
 use bevy_ecs::{system::Res, prelude::EventWriter};
 use bevy_input::{prelude::KeyCode, ButtonState, keyboard::KeyboardInput};
-use bevy_log::debug_span;
+use bevy_log::prelude::*;
 use crossbeam::channel::{Receiver, bounded, Sender};
 
 struct InputChannel(Receiver<Vec<KeyboardInput>>);
@@ -37,19 +37,29 @@ fn poll_input_channel(rx: Res<InputChannel>, mut keyboard_input: EventWriter<Key
 fn read_remote(tx: Sender<Vec<KeyboardInput>>) {
     let srv = std::net::TcpListener::bind("0.0.0.0:4001".parse::<SocketAddrV4>().unwrap()).unwrap();
 
-    let (mut stream, _) = srv.accept().unwrap();
-    println!("connected");
+    while let Err(e) = run_input_server(&tx, &srv) {
+        error!(e);
+    }
+}
+
+fn run_input_server(tx: &Sender<Vec<KeyboardInput>>, srv: &std::net::TcpListener) -> Result<(), String> {
+    let (mut stream, _) = srv.accept()
+        .map_err(|e| format!("could not accept incoming request, {e:?}"))?;
+
+    debug!("a client is connected to input server");
 
     loop {
-
         let span = debug_span!("read_remote", name = "read_remote").entered();
-        stream.write(&[0]).unwrap();
-        let events: Vec<(KeyCode, ButtonState)> = bincode::deserialize_from(&stream).unwrap();
+
+        stream.write(&[0])
+            .map_err(|e| format!("could not send sync message, {e:?}"))?;
+
+        let events: Vec<(KeyCode, ButtonState)> = bincode::deserialize_from(&stream)
+            .map_err(|e| format!("could not deserialize keycodes, {e:?}"))?;
+
         drop(span);
 
-        if let Err(e) = tx.send(events.iter().map(|event| KeyboardInput { scan_code: 0, key_code: Some(event.0), state: event.1 }).collect()) {
-            eprintln!("failed to send KeyboardInput {e:?}");
-            break;
-        }
+        tx.send(events.iter().map(|event| KeyboardInput { scan_code: 0, key_code: Some(event.0), state: event.1 }).collect())
+            .map_err(|e| format!("could not send keyboard events to receiver, {e:?}"))?;
     }
 }

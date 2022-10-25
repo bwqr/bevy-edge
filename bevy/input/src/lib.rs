@@ -8,7 +8,13 @@ static KEY_EVENTS: OnceCell<RwLock<HashMap<KeyCode, ButtonState>>> = OnceCell::n
 pub fn init(address: String) {
     KEY_EVENTS.set(RwLock::new(HashMap::new())).unwrap();
 
-    std::thread::spawn(move || send_key_events(address));
+    std::thread::spawn(move || {
+        while let Err(e) = send_key_events(address.as_str()) {
+            log::error!("{e}");
+
+            std::thread::sleep(std::time::Duration::from_secs(2));
+        }
+    });
 }
 
 pub fn press(key_code: KeyCode) {
@@ -42,14 +48,19 @@ pub fn key_code_from_i32(value: i32) -> KeyCode {
     }
 }
 
-fn send_key_events(address: String) {
-    let mut stream = std::net::TcpStream::connect(address.as_str()).unwrap();
+fn send_key_events(address: &str) -> Result<(), String> {
+    let mut stream = std::net::TcpStream::connect(address)
+        .map_err(|e| format!("failed to connect server, {e:?}"))?;
+
+    log::debug!("connected to server");
 
     loop {
-        bincode::serialize_into(&mut stream, &collect_key_events()).unwrap();
+        bincode::serialize_into(&mut stream, &collect_key_events())
+            .map_err(|e| format!("failed to sent key events, {e:?}"))?;
+
         let mut byte = [0];
-        while stream.read(&mut byte).unwrap() == 0 {
-        }
+
+        while 0 == stream.read(&mut byte).map_err(|e| format!("failed to read sync message, {e:?}"))? {}
     }
 }
 
