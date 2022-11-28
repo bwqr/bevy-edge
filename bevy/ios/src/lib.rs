@@ -5,7 +5,7 @@ pub extern fn input_init() {
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    input::init("192.168.1.42:4001".to_string());
+    input::init("192.168.1.37:4001".to_string());
 
     log::info!("bevyedge is built with {} profile", if cfg!(debug_assertions) { "debug" } else { "release" });
     log::info!("bevyedge runtime is initialized");

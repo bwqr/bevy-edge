@@ -2,7 +2,7 @@ package com.bwqr.bevyedge
 
 class Input {
     enum class KeyCode(val id: Int) {
-        Up(0), Down(1),
+        Up(0), Right(1), Down(2), Left(3),
     }
 
     companion object {

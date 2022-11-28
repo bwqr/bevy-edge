@@ -50,22 +50,22 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     Column {
-        Text("Up", modifier = Modifier.pointerInput(Unit) {
+        Text("Left", modifier = Modifier.pointerInput(Unit) {
             detectTapGestures(
                 onPress = {
-                    Input.press(Input.KeyCode.Up)
+                    Input.press(Input.KeyCode.Left)
                     tryAwaitRelease()
-                    Input.release(Input.KeyCode.Up)
+                    Input.release(Input.KeyCode.Left)
                 }
             )
         })
 
-        Text("Down", modifier = Modifier.pointerInput(Unit) {
+        Text("Right", modifier = Modifier.pointerInput(Unit) {
             detectTapGestures(
                 onPress = {
-                    Input.press(Input.KeyCode.Down)
+                    Input.press(Input.KeyCode.Right)
                     tryAwaitRelease()
-                    Input.release(Input.KeyCode.Down)
+                    Input.release(Input.KeyCode.Right)
                 }
             )
         })

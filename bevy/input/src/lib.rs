@@ -40,10 +40,10 @@ pub fn release(key_code: KeyCode) {
 
 pub fn key_code_from_i32(value: i32) -> KeyCode {
     match value {
-        0 => KeyCode::W,
-        1 => KeyCode::D,
-        2 => KeyCode::S,
-        3 => KeyCode::A,
+        0 => KeyCode::Up,
+        1 => KeyCode::Right,
+        2 => KeyCode::Down,
+        3 => KeyCode::Left,
         _ => panic!("unknown value is provided for key code {value}"),
     }
 }
