@@ -1,0 +1,32 @@
+[package]
+name = "physics"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy_core.workspace = true
+bevy_app.workspace = true
+bevy_asset.workspace = true
+bevy_transform.workspace = true
+bevy_time.workspace = true
+bevy_window.workspace = true
+bevy_log.workspace = true
+bevy_sprite.workspace = true
+bevy_ui.workspace = true
+bevy_derive.workspace = true
+bevy_math.workspace = true
+bevy_utils.workspace = true
+bevy_core_pipeline.workspace = true
+bevy_render.workspace = true
+bevy_winit.workspace = true
+bevy_ecs.workspace = true
+bevy_pbr.workspace = true
+bevy_input.workspace = true
+bevy_scene.workspace = true
+bevy_hierarchy.workspace = true
+
+bevy_rapier3d = { path = "../../../bevy_rapier/bevy_rapier3d", features = ["dim3"] }
+
+log.workspace = true
