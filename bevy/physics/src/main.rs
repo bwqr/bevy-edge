@@ -22,8 +22,8 @@ use bevy_transform::{prelude::Transform, TransformBundle, TransformPlugin};
 use bevy_window::WindowPlugin;
 use bevy_winit::WinitPlugin;
 
-mod extract_param;
 mod plugin;
+mod systems;
 
 #[derive(Component)]
 struct Shape;
