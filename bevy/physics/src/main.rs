@@ -23,6 +23,10 @@ use bevy_window::WindowPlugin;
 use bevy_winit::WinitPlugin;
 
 mod plugin;
+mod request;
+mod response;
+mod server;
+mod sync;
 mod systems;
 
 #[derive(Component)]
