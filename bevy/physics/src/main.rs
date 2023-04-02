@@ -1,288 +1,105 @@
-use bevy_app::App;
-use bevy_asset::{AssetPlugin, Assets};
-use bevy_core::CorePlugin;
-use bevy_core_pipeline::{prelude::Camera3dBundle, CorePipelinePlugin};
-use bevy_ecs::{
-    prelude::Component,
-    system::{Commands, ResMut},
-};
-use bevy_input::InputPlugin;
-use bevy_log::LogPlugin;
-use bevy_math::Vec3;
-use bevy_pbr::{AmbientLight, PbrBundle, PbrPlugin, StandardMaterial};
-use bevy_rapier3d::prelude::{Collider, ColliderMassProperties, RigidBody};
-use bevy_render::{
-    prelude::{Color, Mesh},
-    texture::ImagePlugin,
-    RenderPlugin,
-};
-use bevy_scene::ScenePlugin;
-use bevy_time::TimePlugin;
-use bevy_transform::{prelude::Transform, TransformBundle, TransformPlugin};
-use bevy_window::WindowPlugin;
-use bevy_winit::WinitPlugin;
+use std::net::SocketAddrV4;
 
-mod plugin;
+use bevy_ecs::prelude::Entity;
+use bevy_rapier3d::{
+    prelude::{RapierConfiguration, RapierContext},
+    utils,
+};
+
+use crate::request::Request;
+
 mod request;
 mod response;
-mod server;
-mod sync;
-mod systems;
-
-#[derive(Component)]
-struct Shape;
 
 fn main() {
-    if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "physics=debug");
+    env_logger::init();
+
+    log::debug!("starting physics server");
+
+    let srv = std::net::TcpListener::bind("0.0.0.0:4001".parse::<SocketAddrV4>().unwrap()).unwrap();
+
+    while let Err(e) = run_input_server(&srv) {
+        log::error!("An error is occured, {}", e);
     }
-
-    let mut app = App::new();
-
-    app.add_plugin(LogPlugin::default())
-        .add_plugin(CorePlugin::default())
-        .add_plugin(TimePlugin::default())
-        .add_plugin(TransformPlugin::default())
-        .add_plugin(InputPlugin::default())
-        .add_plugin(WindowPlugin::default())
-        .add_plugin(AssetPlugin::default())
-        .add_plugin(ScenePlugin::default())
-        .add_plugin(WinitPlugin::default())
-        .add_plugin(RenderPlugin::default())
-        .add_plugin(ImagePlugin::default())
-        .add_plugin(CorePipelinePlugin::default())
-        .add_plugin(PbrPlugin::default());
-
-    app
-        //.add_plugin(plugin::RapierPhysicsPlugin)
-        .add_plugin(bevy_rapier3d::plugin::RapierPhysicsPlugin::<bevy_rapier3d::plugin::NoUserData>::default())
-        //.add_plugin(bevy_rapier3d::render::RapierDebugRenderPlugin::default())
-        ;
-
-    let args: Vec<String> = std::env::args().collect();
-
-    if args.len() > 1 {
-        match args[1].as_str() {
-            "boxes" => {
-                app.add_startup_system(boxes);
-            }
-            "capsules" => {
-                app.add_startup_system(capsules);
-            }
-            _ => {
-                app.add_startup_system(balls);
-            }
-        }
-    } else {
-        app.add_startup_system(balls);
-    }
-
-    app.add_system(bevy_window::close_on_esc);
-
-    app.run()
 }
 
-fn balls(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // Add a camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 50.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    });
+fn run_input_server(srv: &std::net::TcpListener) -> Result<(), String> {
+    let (mut stream, _) = srv
+        .accept()
+        .map_err(|e| format!("could not accept incoming request, {e:?}"))?;
 
-    /* Create the ground. */
-    commands
-        .spawn(Collider::cuboid(100.0, 0.1, 100.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
-        .insert(PbrBundle {
-            mesh: meshes.add(bevy_render::prelude::shape::Box::new(100.0, 0.1, 100.0).into()),
-            material: materials.add(Color::BLACK.into()),
-            transform: Transform::from_xyz(0.0, -2.0, 0.0),
-            ..Default::default()
-        });
+    log::debug!("a client is connected to input server");
 
-    let num = 15;
-    let rad = 1.5;
+    let mut time = bevy_time::Time::new(std::time::Instant::now());
+    let mut context = RapierContext::default();
+    let config = RapierConfiguration::default();
+    let hooks_instance = ();
 
-    let shift = rad * 2.0 + 1.0;
-    let centerx = shift * (num as f32) / 2.0;
-    let centery = shift / 2.0;
-    let centerz = shift * (num as f32) / 2.0;
+    while let Ok(req) = bincode::deserialize_from::<_, request::Request>(&stream) {
+        time.update();
 
-    for i in 0..num {
-        for j in 0usize..num {
-            for k in 0..num {
-                let x = i as f32 * shift - centerx;
-                let y = j as f32 * shift + centery;
-                let z = k as f32 * shift - centerz;
+        match req {
+            Request::SyncContext(sync_context) => {
+                log::debug!(
+                    "received context rigid {}, collider {}",
+                    sync_context.rigid_bodies.len(),
+                    sync_context.colliders.len(),
+                );
 
-                let status = if j == 0 {
-                    RigidBody::Fixed
-                } else {
-                    RigidBody::Dynamic
+                let mut response = response::SyncContext {
+                    rigid_body_handles: Vec::new(),
+                    collider_handles: Vec::new(),
+                    transforms: Vec::new(),
                 };
 
-                let density = 0.477;
+                for rb in sync_context.rigid_bodies {
+                    let entity = Entity::from_bits(rb.user_data as u64);
+                    let handle = context.bodies.insert(rb);
 
-                commands
-                    .spawn(status)
-                    .insert(Collider::ball(rad))
-                    .insert(ColliderMassProperties::Density(density))
-                    .insert(Shape)
-                    .insert(PbrBundle {
-                        mesh: meshes.add(
-                            bevy_render::prelude::shape::Icosphere {
-                                radius: rad,
-                                ..Default::default()
-                            }
-                            .into(),
-                        ),
-                        material: materials.add(Color::YELLOW.into()),
-                        transform: Transform::from_xyz(x, y, z),
-                        ..Default::default()
-                    });
+                    context.entity2body.insert(entity, handle);
+                    //context.last_body_transform_set.insert(handle, *rb.);
+                    response.rigid_body_handles.push((entity.to_bits(), handle));
+                }
+
+                for collider in sync_context.colliders {
+                    let entity = Entity::from_bits(collider.user_data as u64);
+                    let handle = if let Some(body_handle) = context.entity2body.get(&entity) {
+                        context.colliders.insert_with_parent(
+                            collider,
+                            *body_handle,
+                            &mut context.bodies,
+                        )
+                    } else {
+                        context.colliders.insert(collider)
+                    };
+
+                    context.entity2collider.insert(entity, handle);
+                    response.collider_handles.push((entity.to_bits(), handle));
+                }
+
+                context.step_simulation(
+                    config.gravity,
+                    config.timestep_mode,
+                    None,
+                    &hooks_instance,
+                    &time,
+                    &mut bevy_rapier3d::prelude::SimulationToRenderTime { diff: 0.0 },
+                    None,
+                );
+
+                for (_, rb) in context.bodies.iter() {
+                    let interpolated_pos =
+                        utils::iso_to_transform(rb.position(), context.physics_scale());
+                    response
+                        .transforms
+                        .push((rb.user_data as u64, interpolated_pos));
+                }
+
+                bincode::serialize_into(&mut stream, &response::Response::SyncContext(response))
+                    .unwrap();
             }
         }
     }
 
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 0.5,
-    });
-}
-
-fn boxes(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // Add a camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 50.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    });
-
-    /* Create the ground. */
-    commands
-        .spawn(Collider::cuboid(100.0, 0.1, 100.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
-        .insert(PbrBundle {
-            mesh: meshes.add(bevy_render::prelude::shape::Box::new(100.0, 0.1, 100.0).into()),
-            material: materials.add(Color::BLACK.into()),
-            transform: Transform::from_xyz(0.0, -2.0, 0.0),
-            ..Default::default()
-        });
-
-    let num = 4;
-    let rad = 2.0;
-
-    let shift = rad * 2.0 + rad;
-    let centerx = shift * (num / 2) as f32;
-    let centery = shift / 2.0;
-    let centerz = shift * (num / 2) as f32;
-
-    let mut offset = -(num as f32) * (rad * 2.0 + rad) * 0.5;
-
-    for j in 0usize..47 {
-        for i in 0..num {
-            for k in 0usize..num {
-                let x = i as f32 * shift - centerx + offset;
-                let y = j as f32 * shift + centery + 3.0;
-                let z = k as f32 * shift - centerz + offset;
-
-                let status = RigidBody::Dynamic;
-
-                commands
-                    .spawn(status)
-                    .insert(Collider::cuboid(rad, rad, rad))
-                    .insert(Shape)
-                    .insert(PbrBundle {
-                        mesh: meshes.add(bevy_render::prelude::shape::Cube::new(rad * 2.0).into()),
-                        material: materials.add(Color::YELLOW.into()),
-                        transform: Transform::from_xyz(x, y, z),
-                        ..Default::default()
-                    });
-            }
-        }
-
-        offset -= 0.05 * rad * (num as f32 - 1.0);
-    }
-
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 0.5,
-    });
-}
-
-fn capsules(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // Add a camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 50.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    });
-
-    /* Create the ground. */
-    commands
-        .spawn(Collider::cuboid(100.0, 0.1, 100.0))
-        .insert(PbrBundle {
-            mesh: meshes.add(bevy_render::prelude::shape::Box::new(200.0, 0.2, 200.0).into()),
-            material: materials.add(Color::BLACK.into()),
-            transform: Transform::from_xyz(0.0, -2.0, 0.0),
-            ..Default::default()
-        });
-
-    let num = 8;
-    let rad = 1.0;
-
-    let shift = rad * 2.0 + rad;
-    let shifty = rad * 4.0;
-    let centerx = shift * (num / 2) as f32;
-    let centery = shift / 2.0;
-    let centerz = shift * (num / 2) as f32;
-
-    let mut offset = -(num as f32) * (rad * 2.0 + rad) * 0.5;
-
-    for j in 0usize..47 {
-        for i in 0..num {
-            for k in 0usize..num {
-                let x = i as f32 * shift - centerx + offset;
-                let y = j as f32 * shifty + centery + 3.0;
-                let z = k as f32 * shift - centerz + offset;
-
-                let status = RigidBody::Dynamic;
-
-                commands
-                    .spawn(status)
-                    .insert(Collider::capsule_y(rad, rad))
-                    .insert(Shape)
-                    .insert(PbrBundle {
-                        mesh: meshes.add(
-                            bevy_render::prelude::shape::Capsule {
-                                radius: rad,
-                                depth: rad * 2.0,
-                                ..Default::default()
-                            }
-                            .into(),
-                        ),
-                        material: materials.add(Color::YELLOW.into()),
-                        transform: Transform::from_xyz(x, y, z),
-                        ..Default::default()
-                    });
-            }
-        }
-
-        offset -= 0.05 * rad * (num as f32 - 1.0);
-    }
-
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 0.5,
-    });
+    Err("Stream ended unexpectedly".to_string())
 }

@@ -1,13 +1,24 @@
 use bevy_rapier3d::prelude::RapierConfiguration;
-use crossbeam::channel::{bounded, Receiver, Sender};
 
 use bevy_app::{CoreStage, Plugin};
 use bevy_ecs::{
-    schedule::{IntoSystemDescriptor, StageLabel, SystemStage},
+    schedule::{StageLabel, SystemStage, IntoSystemDescriptor},
     system::Resource,
 };
+use crossbeam::channel::{Sender, Receiver, bounded};
 
-use crate::systems;
+use super::systems;
+
+#[derive(Resource)]
+pub struct RequestSender(pub Sender<physics::request::Request>);
+#[derive(Resource)]
+pub struct ResponseReceiver(pub Receiver<physics::response::Response>);
+
+#[derive(Resource)]
+pub struct RigidBody(pub Vec<bevy_rapier3d::rapier::dynamics::RigidBody>);
+
+#[derive(Resource)]
+pub struct Collider(pub Vec<bevy_rapier3d::rapier::prelude::ColliderBuilder>);
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
 enum PhysicsStage {
@@ -15,10 +26,6 @@ enum PhysicsStage {
     Writeback,
 }
 
-#[derive(Resource)]
-pub struct RequestSender(pub Sender<crate::request::Request>);
-#[derive(Resource)]
-pub struct ResponseReceiver(pub Receiver<crate::response::Response>);
 #[derive(Resource)]
 pub struct LocalContext {
     pub physics_scale: f32,
@@ -31,7 +38,19 @@ impl Plugin for RapierPhysicsPlugin {
         let (req_tx, req_rx) = bounded(1);
         let (res_tx, res_rx) = bounded(1);
 
-        crate::server::start_physics_server(req_rx.clone(), res_tx.clone());
+        std::thread::spawn(move || {
+            let mut stream = std::net::TcpStream::connect("127.0.0.1:4001")
+                .map_err(|e| format!("failed to connect server, {e:?}"))
+                .unwrap();
+
+            while let Ok(req) = req_rx.recv() {
+                bincode::serialize_into(&mut stream, &req).unwrap();
+
+                if let Ok(ctx) = bincode::deserialize_from(&stream) {
+                    res_tx.send(ctx).unwrap();
+                }
+            }
+        });
 
         if app.world.get_resource::<RapierConfiguration>().is_none() {
             app.insert_resource(RapierConfiguration::default());
@@ -41,8 +60,8 @@ impl Plugin for RapierPhysicsPlugin {
         app.insert_resource(ResponseReceiver(res_rx));
         app.insert_resource(LocalContext { physics_scale: 1.0 });
 
-        app.insert_resource(crate::sync::RigidBody(Vec::new()));
-        app.insert_resource(crate::sync::Collider(Vec::new()));
+        app.insert_resource(RigidBody(Vec::new()));
+        app.insert_resource(Collider(Vec::new()));
 
         app.add_stage_after(
             CoreStage::Update,

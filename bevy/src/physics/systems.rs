@@ -15,13 +15,9 @@ use bevy_rapier3d::{
     rapier::prelude::{ColliderBuilder, RigidBodyBuilder},
     utils,
 };
-use bevy_time::Time;
 use bevy_transform::{prelude::{GlobalTransform, Transform}, TransformBundle};
 
-use crate::{
-    plugin::{LocalContext, RequestSender, ResponseReceiver},
-    request, response, sync,
-};
+use super::plugin::{RequestSender, ResponseReceiver};
 
 pub type RigidBodyComponents<'a> = (
     Entity,
@@ -57,8 +53,8 @@ pub type ColliderComponents<'a> = (
 );
 
 pub fn init_rigid_bodies(
-    context: Res<LocalContext>,
-    mut sync_rigid_body: ResMut<crate::sync::RigidBody>,
+    context: Res<super::plugin::LocalContext>,
+    mut sync_rigid_body: ResMut<super::plugin::RigidBody>,
     rigid_bodies: Query<RigidBodyComponents, Without<RapierRigidBodyHandle>>,
 ) {
     log::debug!("initting rigid bodies");
@@ -159,8 +155,8 @@ pub fn init_rigid_bodies(
 
 pub fn init_colliders(
     config: Res<RapierConfiguration>,
-    mut sync_collider: ResMut<crate::sync::Collider>,
-    context: Res<LocalContext>,
+    mut sync_collider: ResMut<super::plugin::Collider>,
+    context: Res<super::plugin::LocalContext>,
     colliders: Query<(ColliderComponents, Option<&GlobalTransform>), Without<RapierColliderHandle>>,
     parent_query: Query<(&Parent, Option<&Transform>), With<RapierRigidBodyHandle>>,
 ) {
@@ -259,19 +255,17 @@ pub fn init_colliders(
 }
 
 pub fn send_context(
-    mut rigid_bodies: ResMut<sync::RigidBody>,
-    mut colliders: ResMut<sync::Collider>,
+    mut rigid_bodies: ResMut<super::plugin::RigidBody>,
+    mut colliders: ResMut<super::plugin::Collider>,
     request: Res<RequestSender>,
-    time: Res<Time>,
 ) {
     log::debug!("sending context");
 
     request
         .0
-        .send(request::Request::SyncContext(request::SyncContext {
+        .send(physics::request::Request::SyncContext(physics::request::SyncContext {
             rigid_bodies: std::mem::replace(&mut rigid_bodies.0, Vec::new()),
             colliders: std::mem::replace(&mut colliders.0, Vec::new()),
-            time: time.clone(),
         }))
         .unwrap();
 }
@@ -280,7 +274,7 @@ pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseRece
     log::debug!("writing back");
 
     match response.0.recv().unwrap() {
-        response::Response::SyncContext(sync_context) => {
+        physics::response::Response::SyncContext(sync_context) => {
             for (entity, handle) in sync_context.rigid_body_handles {
                 commands
                     .entity(Entity::from_bits(entity))

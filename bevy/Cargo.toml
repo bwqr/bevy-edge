@@ -4,7 +4,6 @@ members = [
   "input",
   "ios",
   "physics",
-  "render",
   "stdin",
 ]
 
@@ -21,6 +20,7 @@ console = "0.15.2"
 log = "0.4.17"
 once_cell = "1.15.0"
 crossbeam = "0.8.2"
+serde = { version = "1.0.159", features = ["derive"] }
 
 bevy_core = { path = "../../bevy/crates/bevy_core", default-features = false }
 bevy_input = { path = "../../bevy/crates/bevy_input", features = ["serialize"] }
@@ -42,8 +42,11 @@ bevy_utils = { path = "../../bevy/crates/bevy_utils", default-features = false }
 bevy_core_pipeline = { path = "../../bevy/crates/bevy_core_pipeline", default-features = false }
 bevy_scene = { path = "../../bevy/crates/bevy_scene", default-features = false }
 bevy_hierarchy = { path = "../../bevy/crates/bevy_hierarchy", default-features = false }
+bevy_rapier3d = { path = "../../bevy_rapier/bevy_rapier3d", features = ["dim3"] }
 
 [dependencies]
+physics = { path = "./physics" }
+
 bevy_core.workspace = true
 bevy_app.workspace = true
 bevy_asset.workspace = true
@@ -62,11 +65,14 @@ bevy_winit.workspace = true
 bevy_ecs.workspace = true
 bevy_pbr.workspace = true
 bevy_input.workspace = true
+bevy_rapier3d.workspace = true
+bevy_scene.workspace = true
+bevy_hierarchy.workspace = true
 
 crossbeam.workspace = true
 
+log.workspace = true
 bincode.workspace = true
-console.workspace = true
 
 [profile.dev]
 opt-level = "z"
