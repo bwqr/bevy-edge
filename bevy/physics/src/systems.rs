@@ -1,12 +1,16 @@
 use bevy_ecs::{
     prelude::Entity,
-    query::Without,
+    query::{Without, With},
     system::{Commands, Query, Res, ResMut},
 };
+use bevy_hierarchy::Parent;
 use bevy_rapier3d::{
     prelude::{
-        Collider, ColliderMassProperties, RapierColliderHandle, RapierConfiguration,
-        RapierRigidBodyHandle, RigidBody, RigidBodyDisabled, Velocity, AdditionalMassProperties, ReadMassProperties, LockedAxes, ExternalForce, GravityScale, Ccd, Dominance, Sleeping, Damping, Sensor, ActiveEvents, ActiveHooks, ActiveCollisionTypes, Friction, Restitution, CollisionGroups, SolverGroups, ContactForceEventThreshold, ColliderDisabled,
+        ActiveCollisionTypes, ActiveEvents, ActiveHooks, AdditionalMassProperties, Ccd, Collider,
+        ColliderDisabled, ColliderMassProperties, CollisionGroups, ContactForceEventThreshold,
+        Damping, Dominance, ExternalForce, Friction, GravityScale, LockedAxes,
+        RapierColliderHandle, RapierConfiguration, RapierRigidBodyHandle, ReadMassProperties,
+        Restitution, RigidBody, RigidBodyDisabled, Sensor, Sleeping, SolverGroups, Velocity,
     },
     rapier::prelude::{ColliderBuilder, RigidBodyBuilder},
     utils,
@@ -74,7 +78,8 @@ pub fn init_rigid_bodies(
         sleep,
         damping,
         disabled,
-    ) in rigid_bodies.iter() {
+    ) in rigid_bodies.iter()
+    {
         let mut builder = RigidBodyBuilder::new((*rb).into());
         builder = builder.enabled(disabled.is_none());
 
@@ -157,6 +162,7 @@ pub fn init_colliders(
     mut sync_collider: ResMut<crate::sync::Collider>,
     context: Res<LocalContext>,
     colliders: Query<(ColliderComponents, Option<&GlobalTransform>), Without<RapierColliderHandle>>,
+    parent_query: Query<(&Parent, Option<&Transform>), With<RapierRigidBodyHandle>>,
 ) {
     for (
         (
@@ -174,11 +180,14 @@ pub fn init_colliders(
             contact_force_event_threshold,
             disabled,
         ),
-        global_transform,
+        _global_transform,
     ) in colliders.iter()
     {
         let mut scaled_shape = shape.clone();
-        scaled_shape.set_scale(shape.scale() / context.physics_scale, config.scaled_shape_subdivision);
+        scaled_shape.set_scale(
+            shape.scale() / context.physics_scale,
+            config.scaled_shape_subdivision,
+        );
         let mut builder = ColliderBuilder::new(scaled_shape.raw.clone());
 
         builder = builder.sensor(sensor.is_some());
@@ -232,10 +241,18 @@ pub fn init_colliders(
 
         builder = builder.user_data(entity.to_bits() as u128);
 
-        builder = builder.position(utils::transform_to_iso(
-            &Transform::from_xyz(0.0, 4.0, 0.0),
-            context.physics_scale,
-        ));
+        let mut body_entity = entity;
+        let mut child_transform = Transform::default();
+        while let Ok(parent) = parent_query.get(body_entity) {
+            if let Some(transform) = parent.1 {
+                child_transform = *transform * child_transform;
+            }
+            body_entity = parent.0.get();
+        }
+
+        builder = builder.user_data(entity.to_bits() as u128);
+
+        builder = builder.position(utils::transform_to_iso(&child_transform, context.physics_scale));
 
         sync_collider.0.push(builder);
     }
@@ -264,13 +281,6 @@ pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseRece
 
     match response.0.recv().unwrap() {
         response::Response::SyncContext(sync_context) => {
-            log::debug!(
-                "received context rigid {}, collider {}, tranforms {}",
-                sync_context.rigid_body_handles.len(),
-                sync_context.collider_handles.len(),
-                sync_context.transforms.len()
-            );
-
             for (entity, handle) in sync_context.rigid_body_handles {
                 commands
                     .entity(Entity::from_bits(entity))
@@ -284,8 +294,6 @@ pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseRece
             }
 
             for (entity, transform) in sync_context.transforms {
-                log::debug!("received transform {}, {}", entity, transform.translation);
-
                 commands
                     .entity(Entity::from_bits(entity))
                     .insert(TransformBundle::from(transform));
