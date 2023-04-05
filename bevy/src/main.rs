@@ -4,7 +4,7 @@ use bevy_core::CorePlugin;
 use bevy_core_pipeline::{prelude::Camera3dBundle, CorePipelinePlugin};
 use bevy_ecs::{
     prelude::Component,
-    system::{Commands, ResMut},
+    system::{Commands, ResMut, Res},
 };
 use bevy_input::InputPlugin;
 use bevy_log::LogPlugin;
@@ -21,14 +21,10 @@ use bevy_time::TimePlugin;
 use bevy_transform::{prelude::Transform, TransformBundle, TransformPlugin};
 use bevy_window::WindowPlugin;
 use bevy_winit::WinitPlugin;
+use settings::{Settings, PhysicsPlugin};
 
 mod physics;
-//mod plugin;
-//mod request;
-//mod response;
-//mod server;
-//mod sync;
-//mod systems;
+mod settings;
 
 #[derive(Component)]
 struct Shape;
@@ -37,6 +33,8 @@ fn main() {
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "physics=debug");
     }
+
+    let settings: Settings = ron::de::from_reader(std::fs::File::open("Settings.ron").unwrap()).unwrap();
 
     let mut app = App::new();
 
@@ -54,31 +52,29 @@ fn main() {
         .add_plugin(CorePipelinePlugin::default())
         .add_plugin(PbrPlugin::default());
 
-    app
-        .add_plugin(physics::RapierPhysicsPlugin)
-        //.add_plugin(bevy_rapier3d::plugin::RapierPhysicsPlugin::<bevy_rapier3d::plugin::NoUserData>::default())
-        //.add_plugin(bevy_rapier3d::render::RapierDebugRenderPlugin::default())
-        ;
-
-    let args: Vec<String> = std::env::args().collect();
-
-    if args.len() > 1 {
-        match args[1].as_str() {
-            "boxes" => {
-                app.add_startup_system(boxes);
-            }
-            "capsules" => {
-                app.add_startup_system(capsules);
-            }
-            _ => {
-                app.add_startup_system(balls);
-            }
+    match settings.physics_plugin {
+        PhysicsPlugin::Default => {
+            app.add_plugin(bevy_rapier3d::plugin::RapierPhysicsPlugin::<bevy_rapier3d::plugin::NoUserData>::default());
         }
-    } else {
-        app.add_startup_system(balls);
+        PhysicsPlugin::Custom => {
+            app.add_plugin(physics::RapierPhysicsPlugin);
+        }
     }
 
-    app.add_system(bevy_window::close_on_esc);
+    match settings.scene.as_str() {
+        "boxes" => {
+            app.add_startup_system(boxes);
+        }
+        "capsules" => {
+            app.add_startup_system(capsules);
+        }
+        _ => {
+            app.add_startup_system(balls);
+        }
+    }
+
+    app.add_system(bevy_window::close_on_esc)
+        .insert_resource(settings);
 
     app.run()
 }
@@ -87,6 +83,7 @@ fn balls(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    settings: Res<Settings>,
 ) {
     // Add a camera
     commands.spawn(Camera3dBundle {
@@ -105,7 +102,7 @@ fn balls(
             ..Default::default()
         });
 
-    let num = 2;
+    let num = settings.num_object;
     let rad = 1.5;
 
     let shift = rad * 2.0 + 1.0;
@@ -159,6 +156,7 @@ fn boxes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    settings: Res<Settings>,
 ) {
     // Add a camera
     commands.spawn(Camera3dBundle {
@@ -177,7 +175,7 @@ fn boxes(
             ..Default::default()
         });
 
-    let num = 4;
+    let num = settings.num_object;
     let rad = 2.0;
 
     let shift = rad * 2.0 + rad;
@@ -222,6 +220,7 @@ fn capsules(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    settings: Res<Settings>,
 ) {
     // Add a camera
     commands.spawn(Camera3dBundle {
@@ -239,7 +238,7 @@ fn capsules(
             ..Default::default()
         });
 
-    let num = 8;
+    let num = settings.num_object;
     let rad = 1.0;
 
     let shift = rad * 2.0 + rad;

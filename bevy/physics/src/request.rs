@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct SyncContext {
     pub rigid_bodies: Vec<RigidBody>,
     pub colliders: Vec<ColliderBuilder>,
+    pub delta_seconds: f32,
 }
 
 #[derive(Deserialize, Serialize)]

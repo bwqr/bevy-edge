@@ -4,6 +4,7 @@ use bevy_ecs::{
     system::{Commands, Query, Res, ResMut},
 };
 use bevy_hierarchy::Parent;
+use bevy_log::info_span;
 use bevy_rapier3d::{
     prelude::{
         ActiveCollisionTypes, ActiveEvents, ActiveHooks, AdditionalMassProperties, Ccd, Collider,
@@ -15,6 +16,7 @@ use bevy_rapier3d::{
     rapier::prelude::{ColliderBuilder, RigidBodyBuilder},
     utils,
 };
+use bevy_time::Time;
 use bevy_transform::{prelude::{GlobalTransform, Transform}, TransformBundle};
 
 use super::plugin::{RequestSender, ResponseReceiver};
@@ -255,6 +257,7 @@ pub fn init_colliders(
 }
 
 pub fn send_context(
+    time: Res<Time>,
     mut rigid_bodies: ResMut<super::plugin::RigidBody>,
     mut colliders: ResMut<super::plugin::Collider>,
     request: Res<RequestSender>,
@@ -266,6 +269,7 @@ pub fn send_context(
         .send(physics::request::Request::SyncContext(physics::request::SyncContext {
             rigid_bodies: std::mem::replace(&mut rigid_bodies.0, Vec::new()),
             colliders: std::mem::replace(&mut colliders.0, Vec::new()),
+            delta_seconds: time.delta_seconds(),
         }))
         .unwrap();
 }
@@ -273,8 +277,11 @@ pub fn send_context(
 pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseReceiver>) {
     log::debug!("writing back");
 
+    let _span = info_span!("writeback", name = "physics").entered();
     match response.0.recv().unwrap() {
         physics::response::Response::SyncContext(sync_context) => {
+            let _span = info_span!("response_received", name = "physics").entered();
+
             for (entity, handle) in sync_context.rigid_body_handles {
                 commands
                     .entity(Entity::from_bits(entity))

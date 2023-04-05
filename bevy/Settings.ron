@@ -1,0 +1,5 @@
+Settings(
+    physics_plugin: Custom,
+    scene: "capsules",
+    num_object: 5,
+)

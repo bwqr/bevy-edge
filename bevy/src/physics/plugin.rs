@@ -1,3 +1,4 @@
+use bevy_log::info_span;
 use bevy_rapier3d::prelude::RapierConfiguration;
 
 use bevy_app::{CoreStage, Plugin};
@@ -39,15 +40,25 @@ impl Plugin for RapierPhysicsPlugin {
         let (res_tx, res_rx) = bounded(1);
 
         std::thread::spawn(move || {
-            let mut stream = std::net::TcpStream::connect("127.0.0.1:4001")
-                .map_err(|e| format!("failed to connect server, {e:?}"))
-                .unwrap();
+            let mut stream = std::net::TcpStream::connect("192.168.1.240:4001").unwrap();
+            stream.set_nodelay(true).unwrap();
 
-            while let Ok(req) = req_rx.recv() {
-                bincode::serialize_into(&mut stream, &req).unwrap();
+            while let Ok(req) = {
+                let _span = info_span!("request_received_over_channel").entered();
+                req_rx.recv()
+            }{
+                {
+                    let _span = info_span!("request_sent").entered();
+                    bincode::serialize_into(&mut stream, &req).unwrap();
+                }
 
-                if let Ok(ctx) = bincode::deserialize_from(&stream) {
-                    res_tx.send(ctx).unwrap();
+                {
+                    let _span = info_span!("response_received").entered();
+
+                    if let Ok(ctx) = bincode::deserialize_from(&stream) {
+                        let _span = info_span!("response_sent_over_channel").entered();
+                        res_tx.send(ctx).unwrap();
+                    }
                 }
             }
         });
