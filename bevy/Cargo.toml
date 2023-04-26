@@ -5,6 +5,7 @@ members = [
   "ios",
   "physics",
   "stdin",
+  "shared",
 ]
 
 [package]
@@ -15,13 +16,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace.dependencies]
-bincode = "1.3.3"
+bincode = { version = "2.0.0-rc.3", features = ["serde"] }
 console = "0.15.2"
 log = "0.4.17"
 once_cell = "1.15.0"
 crossbeam = "0.8.2"
 ron = "0.8.0"
 serde = { version = "1.0.159", features = ["derive"] }
+flate2 = "1.0.25"
 
 bevy_core = { path = "../../bevy/crates/bevy_core", default-features = false }
 bevy_input = { path = "../../bevy/crates/bevy_input", features = ["serialize"] }
@@ -47,6 +49,7 @@ bevy_rapier3d = { path = "../../bevy_rapier/bevy_rapier3d", features = ["dim3"] 
 
 [dependencies]
 physics = { path = "./physics" }
+shared = { path = "./shared" }
 
 bevy_core.workspace = true
 bevy_app = { workspace = true, features = ["trace"] }

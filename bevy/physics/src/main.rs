@@ -1,4 +1,4 @@
-use std::net::SocketAddrV4;
+use std::{net::SocketAddrV4, io::{Write, BufWriter, BufReader}};
 
 use bevy_ecs::prelude::Entity;
 use bevy_rapier3d::{
@@ -8,31 +8,46 @@ use bevy_rapier3d::{
 use tracing::{debug, error, info_span};
 use tracing_chrome::ChromeLayerBuilder;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
+use shared::settings::Settings;
 use crate::request::Request;
 
+mod deflate;
 mod request;
 mod response;
 
+const CONFIG: bincode::config::Configuration = bincode::config::standard();
+
 fn main() {
     debug!("starting physics server");
-    let (chrome_layer, _guard) = ChromeLayerBuilder::new().build();
-    tracing_subscriber::registry().with(chrome_layer).init();
+
+    let settings_path = std::env::args()
+        .collect::<Vec<String>>()
+        .get(1)
+        .map(|s| s.to_owned())
+        .unwrap_or("Settings.ron".to_string());
+
+    let settings: Settings = ron::de::from_reader(std::fs::File::open(settings_path).unwrap()).unwrap();
+    let shared::settings::PhysicsPlugin::Server { compress, .. } = settings.physics_plugin else {
+        panic!("We cannot run server while settings set to default");
+    };
+
+    if let Some(_) = settings.tracing_level {
+        let (chrome_layer, _guard) = ChromeLayerBuilder::new().build();
+        tracing_subscriber::registry().with(chrome_layer).init();
+    }
 
     let srv = std::net::TcpListener::bind("0.0.0.0:4001".parse::<SocketAddrV4>().unwrap()).unwrap();
 
-    while let Err(e) = run_physics_server(&srv) {
+    while let Err(e) = run_physics_server(&srv, compress) {
         error!("An error is occured, {}", e);
     }
 }
 
-fn run_physics_server(srv: &std::net::TcpListener) -> Result<(), String> {
-    let (mut stream, _) = srv
+fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Result<(), String> {
+    let (mut tcp_stream, _) = srv
         .accept()
         .map_err(|e| format!("could not accept incoming request, {e:?}"))?;
-
-    stream.set_nodelay(true).unwrap();
-
-    debug!("a client is connected to input server");
+    println!("accepted client");
 
     let _span = info_span!("client_connected", name = "physics_server").entered();
 
@@ -42,23 +57,20 @@ fn run_physics_server(srv: &std::net::TcpListener) -> Result<(), String> {
 
     while let Ok(req) = {
         let _span = info_span!("request_received", name = "physics_server").entered();
-        bincode::deserialize_from::<_, request::Request>(&stream)
+        let req = if compress.is_some() {
+            bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut BufReader::new(deflate::Decompressor::new(&tcp_stream)), CONFIG)
+        } else {
+            bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut BufReader::new(&tcp_stream), CONFIG)
+        };
+        println!("received request");
+        req
     } {
         match req {
             Request::SyncContext(sync_context) => {
                 let response = {
                     let _span = info_span!("processing", name = "physics_server").entered();
-                    debug!(
-                        "received context rigid {}, collider {}",
-                        sync_context.rigid_bodies.len(),
-                        sync_context.colliders.len(),
-                    );
 
-                    let mut response = response::SyncContext {
-                        rigid_body_handles: Vec::new(),
-                        collider_handles: Vec::new(),
-                        transforms: Vec::new(),
-                    };
+                    let mut response = response::SyncContext::default();
 
                     for rb in sync_context.rigid_bodies {
                         let entity = Entity::from_bits(rb.user_data as u64);
@@ -108,8 +120,22 @@ fn run_physics_server(srv: &std::net::TcpListener) -> Result<(), String> {
 
                 {
                     let _span = info_span!("responded", name = "physics_server").entered();
-                    bincode::serialize_into(&mut stream, &response::Response::SyncContext(response))
-                        .unwrap();
+
+                    println!("Number of objects {}", response.transforms.len());
+
+                    if let Some(level) = compress {
+                        let mut compressor = BufWriter::new(physics::deflate::Compressor::new(&tcp_stream, level));
+                        bincode::serde::encode_into_std_write(&response::Response::SyncContext(response), &mut compressor, CONFIG)
+                            .unwrap();
+                        compressor.flush().unwrap();
+                    } else {
+                        bincode::serde::encode_into_std_write(&response::Response::SyncContext(response), &mut tcp_stream, CONFIG)
+                            .unwrap();
+                    }
+
+                    // Force flushing the buffer
+                    tcp_stream.set_nodelay(true).unwrap();
+                    tcp_stream.set_nodelay(false).unwrap();
                 }
             }
         }

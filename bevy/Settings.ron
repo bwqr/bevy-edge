@@ -1,5 +1,7 @@
 Settings(
-    physics_plugin: Custom,
-    scene: "capsules",
-    num_object: 5,
+    tracing_level: None,
+    headless: true,
+    physics_plugin: Default,
+    scene: "balls",
+    num_object: 800,
 )

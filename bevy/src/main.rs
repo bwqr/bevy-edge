@@ -1,5 +1,5 @@
 use bevy_app::App;
-use bevy_asset::{AssetPlugin, Assets};
+use bevy_asset::{AssetPlugin, Assets, AddAsset};
 use bevy_core::CorePlugin;
 use bevy_core_pipeline::{prelude::Camera3dBundle, CorePipelinePlugin};
 use bevy_ecs::{
@@ -14,31 +14,43 @@ use bevy_rapier3d::prelude::{Collider, ColliderMassProperties, RigidBody};
 use bevy_render::{
     prelude::{Color, Mesh},
     texture::ImagePlugin,
-    RenderPlugin,
+    RenderPlugin, render_resource::{Shader, ShaderLoader}, mesh::MeshPlugin,
 };
 use bevy_scene::ScenePlugin;
-use bevy_time::TimePlugin;
+use bevy_time::{TimePlugin, Time};
 use bevy_transform::{prelude::Transform, TransformBundle, TransformPlugin};
 use bevy_window::WindowPlugin;
 use bevy_winit::WinitPlugin;
-use settings::{Settings, PhysicsPlugin};
+use shared::settings::{Settings, PhysicsPlugin};
 
 mod physics;
-mod settings;
 
 #[derive(Component)]
 struct Shape;
 
 fn main() {
-    if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "physics=debug");
-    }
+    let settings_path = std::env::args()
+        .collect::<Vec<String>>()
+        .get(1)
+        .map(|s| s.to_owned())
+        .unwrap_or("Settings.ron".to_string());
 
-    let settings: Settings = ron::de::from_reader(std::fs::File::open("Settings.ron").unwrap()).unwrap();
+    let settings: Settings = ron::de::from_reader(std::fs::File::open(settings_path).unwrap()).unwrap();
 
     let mut app = App::new();
 
-    app.add_plugin(LogPlugin::default())
+    if let Some(level) = &settings.tracing_level {
+        let tracing_level = match level.as_str() {
+            "DEBUG" => bevy_utils::tracing::Level::DEBUG,
+            "INFO" => bevy_utils::tracing::Level::INFO,
+            "ERROR" => bevy_utils::tracing::Level::ERROR,
+            _ => bevy_utils::tracing::Level::WARN,
+        };
+
+        app.add_plugin(LogPlugin { level: tracing_level, ..Default::default() });
+    }
+
+    app
         .add_plugin(CorePlugin::default())
         .add_plugin(TimePlugin::default())
         .add_plugin(TransformPlugin::default())
@@ -46,18 +58,30 @@ fn main() {
         .add_plugin(WindowPlugin::default())
         .add_plugin(AssetPlugin::default())
         .add_plugin(ScenePlugin::default())
-        .add_plugin(WinitPlugin::default())
-        .add_plugin(RenderPlugin::default())
+        .add_plugin(WinitPlugin::default());
+
+    if settings.headless {
+        app.add_asset::<Shader>()
+            .add_debug_asset::<Shader>()
+            .init_asset_loader::<ShaderLoader>()
+            .init_debug_asset_loader::<ShaderLoader>();
+
+        app.add_plugin(MeshPlugin);
+    } else {
+        app.add_plugin(RenderPlugin::default());
+    }
+
+    app
         .add_plugin(ImagePlugin::default())
         .add_plugin(CorePipelinePlugin::default())
         .add_plugin(PbrPlugin::default());
 
-    match settings.physics_plugin {
+    match &settings.physics_plugin {
         PhysicsPlugin::Default => {
             app.add_plugin(bevy_rapier3d::plugin::RapierPhysicsPlugin::<bevy_rapier3d::plugin::NoUserData>::default());
         }
-        PhysicsPlugin::Custom => {
-            app.add_plugin(physics::RapierPhysicsPlugin);
+        PhysicsPlugin::Server { address, compress } => {
+            app.add_plugin(physics::RapierPhysicsPlugin { address: address.clone(), compress: *compress });
         }
     }
 
@@ -74,6 +98,7 @@ fn main() {
     }
 
     app.add_system(bevy_window::close_on_esc)
+        .add_system(log)
         .insert_resource(settings);
 
     app.run()
@@ -87,7 +112,7 @@ fn balls(
 ) {
     // Add a camera
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 50.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, 75.0, 200.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
 
@@ -102,7 +127,7 @@ fn balls(
             ..Default::default()
         });
 
-    let num = settings.num_object;
+    let num = 10;
     let rad = 1.5;
 
     let shift = rad * 2.0 + 1.0;
@@ -111,10 +136,10 @@ fn balls(
     let centerz = shift * (num as f32) / 2.0;
 
     for i in 0..num {
-        for j in 0usize..num {
+        for j in 0usize..(settings.num_object / num / num) {
             for k in 0..num {
                 let x = i as f32 * shift - centerx;
-                let y = j as f32 * shift + centery;
+                let y = j as f32 * shift * 2.0 + centery;
                 let z = k as f32 * shift - centerz;
 
                 let status = if j == 0 {
@@ -129,6 +154,7 @@ fn balls(
                     .spawn(status)
                     .insert(Collider::ball(rad))
                     .insert(ColliderMassProperties::Density(density))
+                    .insert(TransformBundle::from(Transform::from_xyz(x, y, z)))
                     .insert(Shape)
                     .insert(PbrBundle {
                         mesh: meshes.add(
@@ -167,7 +193,6 @@ fn boxes(
     /* Create the ground. */
     commands
         .spawn(Collider::cuboid(100.0, 0.1, 100.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
         .insert(PbrBundle {
             mesh: meshes.add(bevy_render::prelude::shape::Box::new(100.0, 0.1, 100.0).into()),
             material: materials.add(Color::BLACK.into()),
@@ -285,4 +310,8 @@ fn capsules(
         color: Color::WHITE,
         brightness: 0.5,
     });
+}
+
+fn log(time: Res<Time>) {
+    println!("FPS {}", 1.0 / time.delta_seconds());
 }

@@ -1,3 +1,5 @@
+use std::io::{Write, BufWriter, BufReader};
+
 use bevy_log::info_span;
 use bevy_rapier3d::prelude::RapierConfiguration;
 
@@ -9,6 +11,8 @@ use bevy_ecs::{
 use crossbeam::channel::{Sender, Receiver, bounded};
 
 use super::systems;
+
+const CONFIG: bincode::config::Configuration = bincode::config::standard();
 
 #[derive(Resource)]
 pub struct RequestSender(pub Sender<physics::request::Request>);
@@ -32,16 +36,23 @@ pub struct LocalContext {
     pub physics_scale: f32,
 }
 
-pub struct RapierPhysicsPlugin;
+pub struct RapierPhysicsPlugin {
+    pub compress: Option<u32>,
+    pub address: String,
+}
 
 impl Plugin for RapierPhysicsPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         let (req_tx, req_rx) = bounded(1);
         let (res_tx, res_rx) = bounded(1);
 
+        let compress = self.compress;
+        let address = self.address.clone();
+
         std::thread::spawn(move || {
-            let mut stream = std::net::TcpStream::connect("192.168.1.240:4001").unwrap();
-            stream.set_nodelay(true).unwrap();
+            let mut tcp_stream = std::net::TcpStream::connect(address).unwrap();
+
+            res_tx.send(physics::response::Response::SyncContext(physics::response::SyncContext::default())).unwrap();
 
             while let Ok(req) = {
                 let _span = info_span!("request_received_over_channel").entered();
@@ -49,13 +60,29 @@ impl Plugin for RapierPhysicsPlugin {
             }{
                 {
                     let _span = info_span!("request_sent").entered();
-                    bincode::serialize_into(&mut stream, &req).unwrap();
+                    if let Some(level) = compress {
+                        let mut compressor = BufWriter::new(physics::deflate::Compressor::new(&tcp_stream, level));
+                        bincode::serde::encode_into_std_write(req, &mut compressor, CONFIG).unwrap();
+                        compressor.flush().unwrap();
+                    } else {
+                        bincode::serde::encode_into_std_write(req, &mut tcp_stream, CONFIG).unwrap();
+                    }
+
+                    // Force flushing the buffer
+                    tcp_stream.set_nodelay(true).unwrap();
+                    tcp_stream.set_nodelay(false).unwrap();
                 }
 
                 {
                     let _span = info_span!("response_received").entered();
 
-                    if let Ok(ctx) = bincode::deserialize_from(&stream) {
+                    let res = if compress.is_some() {
+                        bincode::serde::decode_from_std_read(&mut BufReader::new(physics::deflate::Decompressor::new(&tcp_stream)), CONFIG)
+                    } else {
+                        bincode::serde::decode_from_std_read(&mut BufReader::new(&tcp_stream), CONFIG)
+                    };
+
+                    if let Ok(ctx) = res {
                         let _span = info_span!("response_sent_over_channel").entered();
                         res_tx.send(ctx).unwrap();
                     }
@@ -83,8 +110,8 @@ impl Plugin for RapierPhysicsPlugin {
                 .with_system(systems::send_context.after(systems::init_colliders)),
         );
 
-        app.add_stage_after(
-            PhysicsStage::SyncBackend,
+        app.add_stage_before(
+            CoreStage::First,
             PhysicsStage::Writeback,
             SystemStage::parallel().with_system(systems::writeback_rigid_bodies),
         );
