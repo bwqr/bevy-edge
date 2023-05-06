@@ -13,6 +13,14 @@ impl<W> Compressor<W> {
             comp: flate2::Compress::new(flate2::Compression::new(level), false),
         }
     }
+
+    pub fn total_in(&self) -> u64 {
+        self.comp.total_in()
+    }
+
+    pub fn total_out(&self) -> u64 {
+        self.comp.total_out()
+    }
 }
 
 pub struct Decompressor<R> {
@@ -32,6 +40,14 @@ impl<R> Decompressor<R> {
             start: 0,
             end: 0,
         }
+    }
+
+    pub fn total_in(&self) -> u64 {
+        self.decomp.total_in()
+    }
+
+    pub fn total_out(&self) -> u64 {
+        self.decomp.total_out()
     }
 }
 
@@ -103,13 +119,16 @@ impl<W> Write for Compressor<W> where W: Write {
         loop {
             let before_out = self.comp.total_out();
             self.comp.compress(&[], &mut vec, flate2::FlushCompress::Finish).unwrap();
-            let after_out = self.comp.total_out();
+            let compressed: usize = (self.comp.total_out() - before_out).try_into().unwrap();
 
-            if after_out - before_out == 0 {
+            if compressed == 0 {
                 break
+            } else if compressed >= vec.len() {
+                self.dest.write_all(&vec).unwrap();
+            } else {
+                self.dest.write_all(&vec[..compressed + 1]).unwrap();
             }
 
-            self.dest.write_all(&vec[..(after_out - before_out + 1).try_into().unwrap()]).unwrap();
         }
 
         self.dest.flush().unwrap();

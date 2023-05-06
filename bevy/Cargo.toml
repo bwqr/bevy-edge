@@ -57,7 +57,7 @@ bevy_asset.workspace = true
 bevy_transform.workspace = true
 bevy_time.workspace = true
 bevy_window.workspace = true
-bevy_log = { workspace = true, features = ["tracing-chrome"] }
+bevy_log = { workspace = true, features = ["tracing-tracy"] }
 bevy_sprite.workspace = true
 bevy_ui.workspace = true
 bevy_derive.workspace = true
@@ -85,4 +85,4 @@ debug = false
 debug-assertions = false
 
 [profile.release]
-lto = true
+# lto = true

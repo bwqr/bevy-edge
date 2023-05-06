@@ -20,7 +20,6 @@ bincode.workspace = true
 serde.workspace = true
 
 crossbeam.workspace = true
-flate2.workspace = true
 log.workspace = true
 ron.workspace = true
 

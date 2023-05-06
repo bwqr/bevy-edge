@@ -19,6 +19,8 @@ use bevy_rapier3d::{
 use bevy_time::Time;
 use bevy_transform::{prelude::{GlobalTransform, Transform}, TransformBundle};
 
+use crate::bench::Log;
+
 use super::plugin::{RequestSender, ResponseReceiver};
 
 pub type RigidBodyComponents<'a> = (
@@ -274,12 +276,16 @@ pub fn send_context(
         .unwrap();
 }
 
-pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseReceiver>) {
+pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseReceiver>, mut log: ResMut<Log>) {
     log::debug!("writing back");
 
     let _span = info_span!("writeback", name = "physics").entered();
     match response.0.recv().unwrap() {
-        physics::response::Response::SyncContext(sync_context) => {
+        (physics::response::Response::SyncContext(sync_context), uplink, downlink) => {
+            log.update_uplink(uplink);
+            log.update_downlink(downlink);
+            log.update_physics_time(sync_context.elapsed_time);
+
             let _span = info_span!("response_received", name = "physics").entered();
 
             for (entity, handle) in sync_context.rigid_body_handles {

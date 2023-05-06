@@ -8,10 +8,9 @@ use bevy_rapier3d::{
 use tracing::{debug, error, info_span};
 use tracing_chrome::ChromeLayerBuilder;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
-use shared::settings::Settings;
+use shared::{deflate, settings::Settings};
 use crate::request::Request;
 
-mod deflate;
 mod request;
 mod response;
 
@@ -28,7 +27,7 @@ fn main() {
 
     let settings: Settings = ron::de::from_reader(std::fs::File::open(settings_path).unwrap()).unwrap();
     let shared::settings::PhysicsPlugin::Server { compress, .. } = settings.physics_plugin else {
-        panic!("We cannot run server while settings set to default");
+        panic!("We cannot run server while PhysicsPlugin not set to Server");
     };
 
     if let Some(_) = settings.tracing_level {
@@ -47,7 +46,6 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Res
     let (mut tcp_stream, _) = srv
         .accept()
         .map_err(|e| format!("could not accept incoming request, {e:?}"))?;
-    println!("accepted client");
 
     let _span = info_span!("client_connected", name = "physics_server").entered();
 
@@ -57,18 +55,18 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Res
 
     while let Ok(req) = {
         let _span = info_span!("request_received", name = "physics_server").entered();
-        let req = if compress.is_some() {
+        if compress.is_some() {
             bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut BufReader::new(deflate::Decompressor::new(&tcp_stream)), CONFIG)
         } else {
             bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut BufReader::new(&tcp_stream), CONFIG)
-        };
-        println!("received request");
-        req
+        }
     } {
         match req {
             Request::SyncContext(sync_context) => {
                 let response = {
                     let _span = info_span!("processing", name = "physics_server").entered();
+
+                    let instant = std::time::Instant::now();
 
                     let mut response = response::SyncContext::default();
 
@@ -115,16 +113,16 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Res
                             .push((rb.user_data as u64, interpolated_pos));
                     }
 
+                    response.elapsed_time = instant.elapsed().as_micros();
+
                     response
                 };
 
                 {
                     let _span = info_span!("responded", name = "physics_server").entered();
 
-                    println!("Number of objects {}", response.transforms.len());
-
                     if let Some(level) = compress {
-                        let mut compressor = BufWriter::new(physics::deflate::Compressor::new(&tcp_stream, level));
+                        let mut compressor = BufWriter::new(deflate::Compressor::new(&tcp_stream, level));
                         bincode::serde::encode_into_std_write(&response::Response::SyncContext(response), &mut compressor, CONFIG)
                             .unwrap();
                         compressor.flush().unwrap();
