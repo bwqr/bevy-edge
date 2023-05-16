@@ -281,10 +281,11 @@ pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseRece
 
     let _span = info_span!("writeback", name = "physics").entered();
     match response.0.recv().unwrap() {
-        (physics::response::Response::SyncContext(sync_context), uplink, downlink) => {
+        (physics::response::Response::SyncContext(sync_context), network_time, uplink, downlink) => {
             log.update_uplink(uplink);
             log.update_downlink(downlink);
             log.update_physics_time(sync_context.elapsed_time);
+            log.update_network_time(network_time);
 
             let _span = info_span!("response_received", name = "physics").entered();
 

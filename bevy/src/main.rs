@@ -10,7 +10,7 @@ use bevy_input::InputPlugin;
 use bevy_log::LogPlugin;
 use bevy_math::Vec3;
 use bevy_pbr::{AmbientLight, PbrBundle, PbrPlugin, StandardMaterial};
-use bevy_rapier3d::prelude::{Collider, ColliderMassProperties, RigidBody, Velocity};
+use bevy_rapier3d::{prelude::{Collider, ColliderMassProperties, RigidBody, Velocity}, rapier::prelude::{Isometry, SharedShape}};
 use bevy_render::{
     mesh::MeshPlugin,
     prelude::{Color, Mesh},
@@ -32,6 +32,8 @@ mod physics;
 struct Shape;
 
 fn main() {
+    env_logger::init();
+
     let settings_path = std::env::args()
         .collect::<Vec<String>>()
         .get(1)
@@ -152,6 +154,28 @@ fn ball_collides_with_stack(
     let (collider, mesh): (Collider, Mesh) = match settings.scene.shape.as_str() {
         "cuboid" => (Collider::cuboid(rad, rad, rad), bevy_render::prelude::shape::Cube::new(rad * 2.0).into()),
         "capsule" => (Collider::capsule_y(rad, rad), bevy_render::prelude::shape::Capsule { radius: rad, depth: rad * 2.0, ..Default::default() }.into()),
+        "complex" => {
+            let cuboid_rad = rad / 2.0;
+
+            let shapes = vec![
+                (
+                    Isometry::identity(),
+                    SharedShape::cuboid(cuboid_rad, cuboid_rad, cuboid_rad),
+                ),
+                (
+                    Isometry::translation(cuboid_rad, cuboid_rad, 0.0),
+                    SharedShape::cuboid(cuboid_rad, cuboid_rad, cuboid_rad),
+                ),
+                (
+                    Isometry::translation(-cuboid_rad, cuboid_rad, 0.0),
+                    SharedShape::cuboid(cuboid_rad, cuboid_rad, cuboid_rad),
+                ),
+            ];
+
+            let collider = SharedShape::compound(shapes);
+
+            (collider.into(), bevy_render::prelude::shape::Box::new(rad, rad, rad).into())
+        },
         _ => (Collider::ball(rad), bevy_render::prelude::shape::Icosphere { radius: rad, ..Default::default() }.into()),
     };
 
@@ -196,7 +220,7 @@ fn ball_collides_with_stack(
         .insert(PbrBundle {
             mesh: meshes.add(bevy_render::prelude::shape::Icosphere { radius: 10.0, ..Default::default() }.into()),
             material: materials.add(Color::rgb(0.0, 0.0, 0.0).into()),
-            transform: Transform::from_xyz(0.0, 5.0, 100.0),
+            transform: Transform::from_xyz(0.0, 5.0, 150.0),
             ..Default::default()
         });
 

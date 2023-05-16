@@ -12,8 +12,10 @@ pub struct NetworkLog {
 
 #[derive(Resource)]
 pub struct Log {
+    frame_count: u64,
     start: std::time::Instant,
     physics_time: Option<u128>,
+    network_time: Option<u128>,
     uplink: Option<NetworkLog>,
     downlink: Option<NetworkLog>,
 }
@@ -30,6 +32,10 @@ impl Log {
     pub fn update_physics_time(&mut self, time: u128) {
         self.physics_time = Some(time);
     }
+
+    pub fn update_network_time(&mut self, time: u128) {
+        self.network_time = Some(time);
+    }
 }
 
 #[derive(Default)]
@@ -38,8 +44,10 @@ pub struct BenchPlugin;
 impl Plugin for BenchPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app.insert_resource(Log {
+            frame_count: 0,
             start: std::time::Instant::now(),
             physics_time: None,
+            network_time: None,
             uplink: None,
             downlink: None,
         });
@@ -51,7 +59,7 @@ impl Plugin for BenchPlugin {
                 .with_system(close_if_bench_finished),
         );
 
-        println!("timestamp,fps,physics_time,uplink_raw,uplink_compressed,downlink_raw,downlink_compressed");
+        println!("timestamp,fps,network_time,physics_time,uplink_raw,uplink_compressed,downlink_raw,downlink_compressed");
     }
 }
 
@@ -66,14 +74,18 @@ fn log(time: Res<Time>, mut log: ResMut<Log>) {
         .duration_since(log.start)
         .as_millis();
 
+    let frame_count = log.frame_count;
+    log.frame_count += 1;
     let uplink = log.uplink.take().unwrap_or_default();
     let downlink = log.downlink.take().unwrap_or_default();
     let fps = if time.delta_seconds() == 0.0 { 0.0 } else { 1.0 / time.delta_seconds() };
 
     println!(
-        "{},{},{},{},{},{},{}",
+        "{},{},{},{},{},{},{},{},{}",
         timestamp,
         fps,
+        frame_count,
+        log.network_time.take().unwrap_or_default(),
         log.physics_time.take().unwrap_or_default(),
         uplink.raw,
         uplink.compressed,

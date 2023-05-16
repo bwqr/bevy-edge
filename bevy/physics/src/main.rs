@@ -5,7 +5,8 @@ use bevy_rapier3d::{
     prelude::{RapierConfiguration, RapierContext},
     utils,
 };
-use tracing::{debug, error, info_span};
+use log::{debug, error};
+use tracing::info_span;
 use tracing_chrome::ChromeLayerBuilder;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use shared::{deflate, settings::Settings};
@@ -17,6 +18,8 @@ mod response;
 const CONFIG: bincode::config::Configuration = bincode::config::standard();
 
 fn main() {
+    env_logger::init();
+
     debug!("starting physics server");
 
     let settings_path = std::env::args()
@@ -43,25 +46,36 @@ fn main() {
 }
 
 fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Result<(), String> {
-    let (mut tcp_stream, _) = srv
+    let (tcp_stream, _) = srv
         .accept()
         .map_err(|e| format!("could not accept incoming request, {e:?}"))?;
 
     let _span = info_span!("client_connected", name = "physics_server").entered();
 
+    debug!("accepted client");
+
     let mut context = RapierContext::default();
     let config = RapierConfiguration::default();
     let hooks_instance = ();
+    let mut frame_count = 0;
 
-    while let Ok(req) = {
-        let _span = info_span!("request_received", name = "physics_server").entered();
-        if compress.is_some() {
-            bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut BufReader::new(deflate::Decompressor::new(&tcp_stream)), CONFIG)
+    loop {
+        let req = if compress.is_some() {
+            let _span = info_span!("request_received", name = "physics_server").entered();
+            let mut decompressor = BufReader::with_capacity(1024 * 8, deflate::Decompressor::new(&tcp_stream));
+            let req = bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut decompressor, CONFIG).unwrap();
+            decompressor.into_inner().finish().unwrap();
+            req
         } else {
-            bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut BufReader::new(&tcp_stream), CONFIG)
-        }
-    } {
+            let _span = info_span!("request_received", name = "physics_server").entered();
+            bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut BufReader::new(&tcp_stream), CONFIG).unwrap()
+        };
+
         match req {
+            Request::Shutdown => {
+                log::debug!("shutdown is received");
+                return Ok(());
+            },
             Request::SyncContext(sync_context) => {
                 let response = {
                     let _span = info_span!("processing", name = "physics_server").entered();
@@ -127,7 +141,7 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Res
                             .unwrap();
                         compressor.flush().unwrap();
                     } else {
-                        bincode::serde::encode_into_std_write(&response::Response::SyncContext(response), &mut tcp_stream, CONFIG)
+                        bincode::serde::encode_into_std_write(&response::Response::SyncContext(response), &mut BufWriter::new(&tcp_stream), CONFIG)
                             .unwrap();
                     }
 
@@ -137,7 +151,8 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Res
                 }
             }
         }
-    }
 
-    Ok(())
+        frame_count += 1;
+        log::debug!("frame {}", frame_count);
+    }
 }

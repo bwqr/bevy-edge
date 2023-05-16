@@ -11,4 +11,5 @@ pub struct SyncContext {
 #[derive(Deserialize, Serialize)]
 pub enum Request {
     SyncContext(SyncContext),
+    Shutdown,
 }

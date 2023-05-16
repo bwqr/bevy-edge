@@ -24,6 +24,7 @@ crossbeam = "0.8.2"
 ron = "0.8.0"
 serde = { version = "1.0.159", features = ["derive"] }
 flate2 = "1.0.25"
+env_logger = "0.10.0"
 
 bevy_core = { path = "../../bevy/crates/bevy_core", default-features = false }
 bevy_input = { path = "../../bevy/crates/bevy_input", features = ["serialize"] }
@@ -75,6 +76,7 @@ bevy_hierarchy.workspace = true
 
 crossbeam.workspace = true
 bincode.workspace = true
+env_logger.workspace = true
 log.workspace = true
 ron.workspace = true
 serde.workspace = true
