@@ -10,7 +10,7 @@ use tracing::info_span;
 use tracing_chrome::ChromeLayerBuilder;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use shared::{deflate::{Compressor, CONFIG, Decompressor}, settings::Settings};
-use shared::{request::Request, response::{Response, SyncContext}};
+use shared::{request::Request, response::{Response, SyncContext, Log}};
 
 fn main() {
     env_logger::init();
@@ -55,11 +55,16 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) {
     let mut frame_count = 0;
 
     loop {
+        let mut log = Log::default();
+
         let req = if compress.is_some() {
             let _span = info_span!("request_received", name = "physics_server").entered();
             let mut decompressor = BufReader::new(Decompressor::new(&tcp_stream));
             let req = bincode::serde::decode_from_std_read::<Request, _, _>(&mut decompressor, CONFIG).unwrap();
-            decompressor.into_inner().finish().unwrap();
+            let mut decompressor = decompressor.into_inner();
+            decompressor.finish().unwrap();
+            log.decompress_time = decompressor.elapsed();
+
             req
         } else {
             let _span = info_span!("request_received", name = "physics_server").entered();
@@ -122,7 +127,7 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) {
                             .push((rb.user_data as u64, interpolated_pos));
                     }
 
-                    response.elapsed_time = instant.elapsed().as_micros();
+                    log.physics_time = instant.elapsed().as_micros().try_into().unwrap();
 
                     response
                 };
@@ -135,9 +140,15 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) {
                         bincode::serde::encode_into_std_write(&Response::SyncContext(response), &mut compressor, CONFIG)
                             .unwrap();
                         compressor.flush().unwrap();
+                        let compressor = compressor.into_inner().map_err(|_| "failed to get inner of compressor buffer writer").unwrap();
+                        log.compress_time = compressor.elapsed();
                     } else {
                         bincode::serde::encode_into_std_write(&Response::SyncContext(response), &mut BufWriter::new(&tcp_stream), CONFIG)
                             .unwrap();
+                    }
+
+                    {
+                        bincode::serde::encode_into_std_write(&log, &mut BufWriter::with_capacity(1024, &tcp_stream), CONFIG).unwrap();
                     }
 
                     // Force flushing the buffer

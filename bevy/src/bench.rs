@@ -6,36 +6,30 @@ use shared::settings::Settings;
 
 #[derive(Default)]
 pub struct NetworkLog {
-    pub compressed: u64,
     pub raw: u64,
+    pub compressed: u64,
+}
+
+#[derive(Default)]
+pub struct TimeLog {
+    pub compress: u32,
+    pub decompress: u32,
+}
+
+#[derive(Default, Resource)]
+pub struct PluginLog {
+    pub physics_time: u32,
+    pub network_time: u32,
+    pub uplink: NetworkLog,
+    pub downlink: NetworkLog,
+    pub client: TimeLog,
+    pub server: TimeLog,
 }
 
 #[derive(Resource)]
-pub struct Log {
+struct InternalLog {
     frame_count: u64,
     start: std::time::Instant,
-    physics_time: Option<u128>,
-    network_time: Option<u128>,
-    uplink: Option<NetworkLog>,
-    downlink: Option<NetworkLog>,
-}
-
-impl Log {
-    pub fn update_uplink(&mut self, network_log: NetworkLog) {
-        self.uplink = Some(network_log);
-    }
-
-    pub fn update_downlink(&mut self, network_log: NetworkLog) {
-        self.downlink = Some(network_log);
-    }
-
-    pub fn update_physics_time(&mut self, time: u128) {
-        self.physics_time = Some(time);
-    }
-
-    pub fn update_network_time(&mut self, time: u128) {
-        self.network_time = Some(time);
-    }
 }
 
 #[derive(Default)]
@@ -43,14 +37,11 @@ pub struct BenchPlugin;
 
 impl Plugin for BenchPlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.insert_resource(Log {
+        app.insert_resource(InternalLog {
             frame_count: 0,
             start: std::time::Instant::now(),
-            physics_time: None,
-            network_time: None,
-            uplink: None,
-            downlink: None,
-        });
+        })
+        .insert_resource(PluginLog::default());
 
         app.add_system_set_to_stage(
             bevy_app::CoreStage::Last,
@@ -69,27 +60,27 @@ fn close_if_bench_finished(time: Res<Time>, mut windows: ResMut<Windows>, settin
     }
 }
 
-fn log(time: Res<Time>, mut log: ResMut<Log>) {
-    let timestamp = std::time::Instant::now()
-        .duration_since(log.start)
-        .as_millis();
+fn log(time: Res<Time>, mut internal_log: ResMut<InternalLog>, mut log: ResMut<PluginLog>) {
+    let log = std::mem::replace(&mut *log, PluginLog::default());
 
-    let frame_count = log.frame_count;
-    log.frame_count += 1;
-    let uplink = log.uplink.take().unwrap_or_default();
-    let downlink = log.downlink.take().unwrap_or_default();
     let fps = if time.delta_seconds() == 0.0 { 0.0 } else { 1.0 / time.delta_seconds() };
 
     println!(
-        "{},{},{},{},{},{},{},{},{}",
-        timestamp,
+        "{},{},{},{},{},{},{},{},{},{},{},{},{}",
+        internal_log.start.elapsed().as_millis(),
+        internal_log.frame_count,
         fps,
-        frame_count,
-        log.network_time.take().unwrap_or_default(),
-        log.physics_time.take().unwrap_or_default(),
-        uplink.raw,
-        uplink.compressed,
-        downlink.raw,
-        downlink.compressed
+        log.physics_time,
+        log.network_time,
+        log.uplink.raw,
+        log.uplink.compressed,
+        log.downlink.raw,
+        log.downlink.compressed,
+        log.client.compress,
+        log.client.decompress,
+        log.server.compress,
+        log.server.decompress,
     );
+
+    internal_log.frame_count += 1;
 }

@@ -1,4 +1,4 @@
-use std::io::{Write, BufWriter, BufReader};
+use std::io::{Write, BufWriter, BufReader, Read};
 
 use bevy_log::info_span;
 use bevy_rapier3d::prelude::RapierConfiguration;
@@ -12,14 +12,60 @@ use crossbeam::channel::{Sender, Receiver, bounded};
 
 use shared::deflate::{Compressor, Decompressor, CONFIG};
 use shared::{request::Request, response::{Response, SyncContext}};
-use crate::bench::NetworkLog;
+use crate::bench::{PluginLog, NetworkLog, TimeLog};
 
 use super::systems;
+
+struct LogReader<R> {
+    reader: R,
+    read_bytes: usize,
+}
+
+impl<R> LogReader<R> {
+    fn new(reader: R) -> Self {
+        LogReader { reader, read_bytes: 0 }
+    }
+}
+
+impl<R: Read> Read for LogReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        self.reader.read(buf)
+            .map(|read_bytes| {
+                self.read_bytes += read_bytes;
+                read_bytes
+            })
+    }
+}
+
+struct LogWriter<W> {
+    writer: W,
+    written_bytes: usize,
+}
+
+impl<W> LogWriter<W> {
+    fn new(writer: W) -> Self {
+        LogWriter { writer, written_bytes: 0 }
+    }
+}
+
+impl<W: Write> Write for LogWriter<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.writer.write(buf)
+            .map(|written_bytes| {
+                self.written_bytes += written_bytes;
+                written_bytes
+            })
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.writer.flush()
+    }
+}
 
 #[derive(Resource)]
 pub struct RequestSender(pub Sender<Request>);
 #[derive(Resource)]
-pub struct ResponseReceiver(pub Receiver<(Response, u128, NetworkLog, NetworkLog)>);
+pub struct ResponseReceiver(pub Receiver<(Response, PluginLog)>);
 
 #[derive(Resource)]
 pub struct RigidBody(pub Vec<bevy_rapier3d::rapier::dynamics::RigidBody>);
@@ -56,7 +102,7 @@ impl Plugin for RapierPhysicsPlugin {
             let tcp_stream = std::net::TcpStream::connect(address).unwrap();
             log::debug!("TCP connection is established");
 
-            res_tx.send((Response::SyncContext(SyncContext::default()), 0, NetworkLog::default(), NetworkLog::default())).unwrap();
+            res_tx.send((Response::SyncContext(SyncContext::default()), PluginLog::default())).unwrap();
 
             while let Ok(req) = {
                 let _span = info_span!("request_received_over_channel").entered();
@@ -66,6 +112,7 @@ impl Plugin for RapierPhysicsPlugin {
             }{
                 let mut uplink = NetworkLog::default();
                 let mut downlink = NetworkLog::default();
+                let mut comp_time = TimeLog::default();
 
                 {
                     let _span = info_span!("request_sent").entered();
@@ -81,8 +128,12 @@ impl Plugin for RapierPhysicsPlugin {
 
                         uplink.raw = compressor.total_in();
                         uplink.compressed = compressor.total_out();
+                        comp_time.compress = compressor.elapsed();
                     } else {
-                        bincode::serde::encode_into_std_write(req, &mut BufWriter::new(&tcp_stream), CONFIG).unwrap();
+                        let mut writer = BufWriter::new(LogWriter::new(&tcp_stream));
+                        bincode::serde::encode_into_std_write(req, &mut writer, CONFIG).unwrap();
+                        writer.flush().unwrap();
+                        uplink.raw = writer.into_inner().map_err(|_| "failed to get inner of buffer writer").unwrap().written_bytes.try_into().unwrap();
                     }
 
                     // Force flushing the buffer
@@ -96,34 +147,40 @@ impl Plugin for RapierPhysicsPlugin {
                     let _span = info_span!("response_received").entered();
                     let instant = std::time::Instant::now();
 
-                    let res = if compress.is_some() {
+                    let log: shared::response::Log;
+
+                    let ctx = if compress.is_some() {
                         let mut decompressor = BufReader::new(Decompressor::new(&tcp_stream));
-                        let res = bincode::serde::decode_from_std_read(&mut decompressor, CONFIG);
+                        let res = bincode::serde::decode_from_std_read(&mut decompressor, CONFIG).unwrap();
                         let mut decompressor = decompressor.into_inner();
                         decompressor.finish().unwrap();
                         downlink.raw = decompressor.total_out();
                         downlink.compressed = decompressor.total_in();
+                        comp_time.decompress = decompressor.elapsed();
+                        log = bincode::serde::decode_from_std_read(&mut BufReader::with_capacity(1024, &tcp_stream), CONFIG).unwrap();
 
                         res
                     } else {
-                        bincode::serde::decode_from_std_read(&mut BufReader::new(&tcp_stream), CONFIG)
+                        let mut reader = BufReader::new(LogReader::new(&tcp_stream));
+                        let res = bincode::serde::decode_from_std_read(&mut reader, CONFIG).unwrap();
+                        log = bincode::serde::decode_from_std_read(&mut reader, CONFIG).unwrap();
+                        downlink.raw = reader.into_inner().read_bytes.try_into().unwrap();
+
+                        res
                     };
 
-                    let ctx = match res {
-                        Ok(ctx) => ctx,
-                        Err(e) => {
-                            panic!("Failed to read data {e:?}");
-                        },
+                    let plugin_log = PluginLog {
+                        physics_time: log.physics_time,
+                        network_time: instant.elapsed().as_micros().try_into().unwrap(),
+                        uplink,
+                        downlink,
+                        client: comp_time,
+                        server: TimeLog { compress: log.compress_time, decompress: log.decompress_time }
                     };
 
-                    let duration = instant.elapsed().as_micros();
-
-                    {
-                        let _span = info_span!("response_sent_over_channel").entered();
-                        if let Err(e) = res_tx.send((ctx, duration, uplink, downlink)) {
-                            log::debug!("Failed to send response {e:?}");
-                            break;
-                        }
+                    if let Err(e) = res_tx.send((ctx, plugin_log)) {
+                        log::debug!("Failed to send response {e:?}");
+                        break;
                     }
                 }
             }

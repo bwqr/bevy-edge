@@ -20,7 +20,7 @@ use bevy_time::Time;
 use bevy_transform::{prelude::{GlobalTransform, Transform}, TransformBundle};
 use shared::{request::{Request, SyncContext}, response::Response};
 
-use crate::bench::Log;
+use crate::bench::PluginLog;
 
 use super::plugin::{RequestSender, ResponseReceiver};
 
@@ -277,16 +277,13 @@ pub fn send_context(
         .unwrap();
 }
 
-pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseReceiver>, mut log: ResMut<Log>) {
+pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseReceiver>, mut log: ResMut<PluginLog>) {
     log::debug!("writing back");
 
     let _span = info_span!("writeback", name = "physics").entered();
     match response.0.recv().unwrap() {
-        (Response::SyncContext(sync_context), network_time, uplink, downlink) => {
-            log.update_uplink(uplink);
-            log.update_downlink(downlink);
-            log.update_physics_time(sync_context.elapsed_time);
-            log.update_network_time(network_time);
+        (Response::SyncContext(sync_context), plugin_log) => {
+            *log = plugin_log;
 
             let _span = info_span!("response_received", name = "physics").entered();
 
