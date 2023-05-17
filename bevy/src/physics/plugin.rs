@@ -10,17 +10,16 @@ use bevy_ecs::{
 };
 use crossbeam::channel::{Sender, Receiver, bounded};
 
-use shared::deflate;
+use shared::deflate::{Compressor, Decompressor, CONFIG};
+use shared::{request::Request, response::{Response, SyncContext}};
 use crate::bench::NetworkLog;
 
 use super::systems;
 
-const CONFIG: bincode::config::Configuration = bincode::config::standard();
-
 #[derive(Resource)]
-pub struct RequestSender(pub Sender<physics::request::Request>);
+pub struct RequestSender(pub Sender<Request>);
 #[derive(Resource)]
-pub struct ResponseReceiver(pub Receiver<(physics::response::Response, u128, NetworkLog, NetworkLog)>);
+pub struct ResponseReceiver(pub Receiver<(Response, u128, NetworkLog, NetworkLog)>);
 
 #[derive(Resource)]
 pub struct RigidBody(pub Vec<bevy_rapier3d::rapier::dynamics::RigidBody>);
@@ -57,7 +56,7 @@ impl Plugin for RapierPhysicsPlugin {
             let tcp_stream = std::net::TcpStream::connect(address).unwrap();
             log::debug!("TCP connection is established");
 
-            res_tx.send((physics::response::Response::SyncContext(physics::response::SyncContext::default()), 0, NetworkLog::default(), NetworkLog::default())).unwrap();
+            res_tx.send((Response::SyncContext(SyncContext::default()), 0, NetworkLog::default(), NetworkLog::default())).unwrap();
 
             while let Ok(req) = {
                 let _span = info_span!("request_received_over_channel").entered();
@@ -72,7 +71,7 @@ impl Plugin for RapierPhysicsPlugin {
                     let _span = info_span!("request_sent").entered();
 
                     if let Some(level) = compress {
-                        let mut compressor = BufWriter::new(deflate::Compressor::new(&tcp_stream, level));
+                        let mut compressor = BufWriter::new(Compressor::new(&tcp_stream, level));
                         bincode::serde::encode_into_std_write(req, &mut compressor, CONFIG).unwrap();
                         compressor.flush().unwrap();
 
@@ -98,7 +97,7 @@ impl Plugin for RapierPhysicsPlugin {
                     let instant = std::time::Instant::now();
 
                     let res = if compress.is_some() {
-                        let mut decompressor = BufReader::with_capacity(1024 * 8, deflate::Decompressor::new(&tcp_stream));
+                        let mut decompressor = BufReader::new(Decompressor::new(&tcp_stream));
                         let res = bincode::serde::decode_from_std_read(&mut decompressor, CONFIG);
                         let mut decompressor = decompressor.into_inner();
                         decompressor.finish().unwrap();
@@ -131,11 +130,11 @@ impl Plugin for RapierPhysicsPlugin {
             log::debug!("Shuting down the Plugin thread");
 
             if let Some(level) = compress {
-                let mut compressor = BufWriter::new(deflate::Compressor::new(&tcp_stream, level));
-                bincode::serde::encode_into_std_write(physics::request::Request::Shutdown, &mut compressor, CONFIG).unwrap();
+                let mut compressor = BufWriter::new(Compressor::new(&tcp_stream, level));
+                bincode::serde::encode_into_std_write(Request::Shutdown, &mut compressor, CONFIG).unwrap();
                 compressor.flush().unwrap();
             } else {
-                bincode::serde::encode_into_std_write(physics::request::Request::Shutdown, &mut BufWriter::new(&tcp_stream), CONFIG).unwrap();
+                bincode::serde::encode_into_std_write(Request::Shutdown, &mut BufWriter::new(&tcp_stream), CONFIG).unwrap();
             }
 
             log::debug!("Plugin thread is finishing");

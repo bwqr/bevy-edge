@@ -18,6 +18,7 @@ use bevy_rapier3d::{
 };
 use bevy_time::Time;
 use bevy_transform::{prelude::{GlobalTransform, Transform}, TransformBundle};
+use shared::{request::{Request, SyncContext}, response::Response};
 
 use crate::bench::Log;
 
@@ -268,7 +269,7 @@ pub fn send_context(
 
     request
         .0
-        .send(physics::request::Request::SyncContext(physics::request::SyncContext {
+        .send(Request::SyncContext(SyncContext {
             rigid_bodies: std::mem::replace(&mut rigid_bodies.0, Vec::new()),
             colliders: std::mem::replace(&mut colliders.0, Vec::new()),
             delta_seconds: time.delta_seconds(),
@@ -281,7 +282,7 @@ pub fn writeback_rigid_bodies(mut commands: Commands, response: Res<ResponseRece
 
     let _span = info_span!("writeback", name = "physics").entered();
     match response.0.recv().unwrap() {
-        (physics::response::Response::SyncContext(sync_context), network_time, uplink, downlink) => {
+        (Response::SyncContext(sync_context), network_time, uplink, downlink) => {
             log.update_uplink(uplink);
             log.update_downlink(downlink);
             log.update_physics_time(sync_context.elapsed_time);

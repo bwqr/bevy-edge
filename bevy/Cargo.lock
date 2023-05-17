@@ -238,7 +238,6 @@ dependencies = [
  "crossbeam",
  "env_logger 0.10.0",
  "log",
- "physics",
  "ron",
  "serde",
  "shared",
@@ -2702,7 +2701,6 @@ dependencies = [
  "bevy_ecs",
  "bevy_rapier3d",
  "bevy_time",
- "bevy_transform",
  "bincode",
  "crossbeam",
  "env_logger 0.10.0",
@@ -3077,6 +3075,9 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
+ "bevy_rapier3d",
+ "bevy_transform",
+ "bincode",
  "flate2",
  "log",
  "serde",

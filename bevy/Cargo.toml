@@ -49,7 +49,6 @@ bevy_hierarchy = { path = "../../bevy/crates/bevy_hierarchy", default-features =
 bevy_rapier3d = { path = "../../bevy_rapier/bevy_rapier3d", features = ["dim3"] }
 
 [dependencies]
-physics = { path = "./physics" }
 shared = { path = "./shared" }
 
 bevy_core.workspace = true

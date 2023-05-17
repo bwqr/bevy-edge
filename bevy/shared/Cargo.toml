@@ -7,6 +7,9 @@ edition = "2021"
 
 [dependencies]
 bevy_ecs.workspace = true
+bevy_rapier3d = { workspace = true, features = ["serde-serialize"] }
+bevy_transform.workspace = true
+bincode.workspace = true
 flate2.workspace = true
 log.workspace = true
 serde.workspace = true

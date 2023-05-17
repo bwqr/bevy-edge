@@ -5,17 +5,12 @@ use bevy_rapier3d::{
     prelude::{RapierConfiguration, RapierContext},
     utils,
 };
-use log::{debug, error};
+use log::debug;
 use tracing::info_span;
 use tracing_chrome::ChromeLayerBuilder;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
-use shared::{deflate, settings::Settings};
-use crate::request::Request;
-
-mod request;
-mod response;
-
-const CONFIG: bincode::config::Configuration = bincode::config::standard();
+use shared::{deflate::{Compressor, CONFIG, Decompressor}, settings::Settings};
+use shared::{request::Request, response::{Response, SyncContext}};
 
 fn main() {
     env_logger::init();
@@ -40,15 +35,15 @@ fn main() {
 
     let srv = std::net::TcpListener::bind("0.0.0.0:4001".parse::<SocketAddrV4>().unwrap()).unwrap();
 
-    while let Err(e) = run_physics_server(&srv, compress) {
-        error!("An error is occured, {}", e);
-    }
+    run_physics_server(&srv, compress);
+
+    debug!("Server is finished, terminating");
 }
 
-fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Result<(), String> {
+fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) {
     let (tcp_stream, _) = srv
         .accept()
-        .map_err(|e| format!("could not accept incoming request, {e:?}"))?;
+        .unwrap();
 
     let _span = info_span!("client_connected", name = "physics_server").entered();
 
@@ -62,19 +57,19 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Res
     loop {
         let req = if compress.is_some() {
             let _span = info_span!("request_received", name = "physics_server").entered();
-            let mut decompressor = BufReader::with_capacity(1024 * 8, deflate::Decompressor::new(&tcp_stream));
-            let req = bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut decompressor, CONFIG).unwrap();
+            let mut decompressor = BufReader::new(Decompressor::new(&tcp_stream));
+            let req = bincode::serde::decode_from_std_read::<Request, _, _>(&mut decompressor, CONFIG).unwrap();
             decompressor.into_inner().finish().unwrap();
             req
         } else {
             let _span = info_span!("request_received", name = "physics_server").entered();
-            bincode::serde::decode_from_std_read::<request::Request, _, _>(&mut BufReader::new(&tcp_stream), CONFIG).unwrap()
+            bincode::serde::decode_from_std_read::<Request, _, _>(&mut BufReader::new(&tcp_stream), CONFIG).unwrap()
         };
 
         match req {
             Request::Shutdown => {
                 log::debug!("shutdown is received");
-                return Ok(());
+                return;
             },
             Request::SyncContext(sync_context) => {
                 let response = {
@@ -82,7 +77,7 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Res
 
                     let instant = std::time::Instant::now();
 
-                    let mut response = response::SyncContext::default();
+                    let mut response = SyncContext::default();
 
                     for rb in sync_context.rigid_bodies {
                         let entity = Entity::from_bits(rb.user_data as u64);
@@ -136,12 +131,12 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) -> Res
                     let _span = info_span!("responded", name = "physics_server").entered();
 
                     if let Some(level) = compress {
-                        let mut compressor = BufWriter::new(deflate::Compressor::new(&tcp_stream, level));
-                        bincode::serde::encode_into_std_write(&response::Response::SyncContext(response), &mut compressor, CONFIG)
+                        let mut compressor = BufWriter::new(Compressor::new(&tcp_stream, level));
+                        bincode::serde::encode_into_std_write(&Response::SyncContext(response), &mut compressor, CONFIG)
                             .unwrap();
                         compressor.flush().unwrap();
                     } else {
-                        bincode::serde::encode_into_std_write(&response::Response::SyncContext(response), &mut BufWriter::new(&tcp_stream), CONFIG)
+                        bincode::serde::encode_into_std_write(&Response::SyncContext(response), &mut BufWriter::new(&tcp_stream), CONFIG)
                             .unwrap();
                     }
 

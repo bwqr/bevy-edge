@@ -5,15 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-name = "physics"
-path = "src/lib.rs"
-
 [dependencies]
 shared = { path = "../shared" }
 
 bevy_ecs.workspace = true
-bevy_transform.workspace = true
 bevy_time.workspace = true
 bevy_rapier3d = { workspace = true, features = ["serde-serialize"] }
 bincode.workspace = true
