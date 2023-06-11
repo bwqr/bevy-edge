@@ -25,10 +25,19 @@ impl Display for PhysicsPlugin {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
+pub enum Room {
+    Open,
+    Closed,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Scene {
     pub camera: (f32, f32, f32),
     pub num_object: usize,
     pub shape: String,
+    pub restitution: f32,
+    pub room: Room,
+    pub ccd: bool,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -41,7 +50,8 @@ pub struct Settings {
 }
 
 fn main() {
-    let output_dir = std::env::args().into_iter().collect::<Vec<String>>();
+    let output_dir = std::env::args().into_iter().collect::<Vec<String>>()[1].clone();
+
     let plugins = [
         PhysicsPlugin::Default,
         PhysicsPlugin::Server {
@@ -49,34 +59,37 @@ fn main() {
             address: "192.168.1.240:4001".to_string(),
         },
         PhysicsPlugin::Server {
-            compress: Some(2),
+            compress: Some(1),
             address: "192.168.1.240:4001".to_string(),
         },
         PhysicsPlugin::Server {
-            compress: Some(9),
+            compress: Some(3),
             address: "192.168.1.240:4001".to_string(),
         },
     ];
 
     let num_objects = [500, 1000, 2000, 4000, 8000];
 
-    let shapes = ["ball", "capsule", "cuboid"];
+    let shapes = ["ball", "capsule", "cuboid", "complex"];
 
     for plugin in plugins {
         for num_object in num_objects {
             for shape in shapes {
                 let mut file =
-                    std::fs::File::create(format!("{}/{}_{}_{}", output_dir[1], plugin, num_object, shape)).unwrap();
+                    std::fs::File::create(format!("{}/{}_{}_{}", output_dir, plugin, num_object, shape)).unwrap();
                 file.write(
                     ron::to_string(&Settings {
                         tracing_level: None,
                         headless: true,
                         physics_plugin: plugin.clone(),
-                        bench_length: 10.0,
+                        bench_length: 30.0,
                         scene: Scene {
                             camera: (0.0, 80.0, 260.0),
                             num_object,
                             shape: shape.to_string(),
+                            restitution: 0.0,
+                            room: Room::Open,
+                            ccd: false,
                         },
                     })
                     .unwrap()

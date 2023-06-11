@@ -50,7 +50,7 @@ impl Plugin for BenchPlugin {
                 .with_system(close_if_bench_finished),
         );
 
-        println!("timestamp,fps,network_time,physics_time,uplink_raw,uplink_compressed,downlink_raw,downlink_compressed");
+        println!("timestamp,frame,fps,physics_time,network_time,uplink_raw,uplink_compressed,downlink_raw,downlink_compressed,client_compress_time,client_decompress_time,server_compress_time,server_decompress_time");
     }
 }
 

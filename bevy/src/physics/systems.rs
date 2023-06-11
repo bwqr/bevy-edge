@@ -1,9 +1,8 @@
 use bevy_ecs::{
     prelude::Entity,
-    query::{Without, With},
+    query::Without,
     system::{Commands, Query, Res, ResMut},
 };
-use bevy_hierarchy::Parent;
 use bevy_log::info_span;
 use bevy_rapier3d::{
     prelude::{
@@ -152,8 +151,6 @@ pub fn init_rigid_bodies(
             activation.angular_threshold = sleep.angular_threshold;
         }
 
-        builder = builder.user_data(entity.to_bits() as u128);
-
         sync_rigid_body.0.push(builder.build());
     }
 }
@@ -162,26 +159,22 @@ pub fn init_colliders(
     config: Res<RapierConfiguration>,
     mut sync_collider: ResMut<super::plugin::Collider>,
     context: Res<super::plugin::LocalContext>,
-    colliders: Query<(ColliderComponents, Option<&GlobalTransform>), Without<RapierColliderHandle>>,
-    parent_query: Query<(&Parent, Option<&Transform>), With<RapierRigidBodyHandle>>,
+    colliders: Query<ColliderComponents, Without<RapierColliderHandle>>,
 ) {
     for (
-        (
-            entity,
-            shape,
-            sensor,
-            mprops,
-            active_events,
-            active_hooks,
-            active_collision_types,
-            friction,
-            restitution,
-            collision_groups,
-            solver_groups,
-            contact_force_event_threshold,
-            disabled,
-        ),
-        _global_transform,
+        entity,
+        shape,
+        sensor,
+        mprops,
+        active_events,
+        active_hooks,
+        active_collision_types,
+        friction,
+        restitution,
+        collision_groups,
+        solver_groups,
+        contact_force_event_threshold,
+        disabled,
     ) in colliders.iter()
     {
         let mut scaled_shape = shape.clone();
@@ -242,18 +235,9 @@ pub fn init_colliders(
 
         builder = builder.user_data(entity.to_bits() as u128);
 
-        let mut body_entity = entity;
-        let mut child_transform = Transform::default();
-        while let Ok(parent) = parent_query.get(body_entity) {
-            if let Some(transform) = parent.1 {
-                child_transform = *transform * child_transform;
-            }
-            body_entity = parent.0.get();
-        }
+        builder = builder.position(utils::transform_to_iso(&Transform::default(), context.physics_scale));
 
         builder = builder.user_data(entity.to_bits() as u128);
-
-        builder = builder.position(utils::transform_to_iso(&child_transform, context.physics_scale));
 
         sync_collider.0.push(builder);
     }

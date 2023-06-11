@@ -85,7 +85,6 @@ pub struct LocalContext {
 }
 
 pub struct RapierPhysicsPlugin {
-    pub compress: Option<u32>,
     pub address: String,
 }
 
@@ -94,13 +93,20 @@ impl Plugin for RapierPhysicsPlugin {
         let (req_tx, req_rx) = bounded(1);
         let (res_tx, res_rx) = bounded(1);
 
-        let compress = self.compress;
+        let settings = app.world.get_resource::<shared::settings::Settings>().unwrap().clone();
         let address = self.address.clone();
 
         std::thread::spawn(move || {
             log::debug!("Plugin thread is started");
             let tcp_stream = std::net::TcpStream::connect(address).unwrap();
             log::debug!("TCP connection is established");
+
+            bincode::serde::encode_into_std_write(&settings, &mut &tcp_stream, CONFIG).unwrap();
+
+            let compress = match settings.physics_plugin {
+                shared::settings::PhysicsPlugin::Server { compress, .. } => compress,
+                shared::settings::PhysicsPlugin::Default => None,
+            };
 
             res_tx.send((Response::SyncContext(SyncContext::default()), PluginLog::default())).unwrap();
 

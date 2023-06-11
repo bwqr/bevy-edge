@@ -17,33 +17,31 @@ fn main() {
 
     debug!("starting physics server");
 
-    let settings_path = std::env::args()
-        .collect::<Vec<String>>()
-        .get(1)
-        .map(|s| s.to_owned())
-        .unwrap_or("Settings.ron".to_string());
+    let srv = std::net::TcpListener::bind("0.0.0.0:4001".parse::<SocketAddrV4>().unwrap()).unwrap();
 
-    let settings: Settings = ron::de::from_reader(std::fs::File::open(settings_path).unwrap()).unwrap();
-    let shared::settings::PhysicsPlugin::Server { compress, .. } = settings.physics_plugin else {
-        panic!("We cannot run server while PhysicsPlugin not set to Server");
+    run_physics_server(&srv);
+
+    debug!("Server is finished, terminating");
+}
+
+fn run_physics_server(srv: &std::net::TcpListener) {
+    let (tcp_stream, _) = srv
+        .accept()
+        .unwrap();
+
+    let settings: Settings = bincode::serde::decode_from_std_read(&mut &tcp_stream, CONFIG).unwrap();
+
+    println!("{}", settings);
+
+    let compress = match settings.physics_plugin {
+        shared::settings::PhysicsPlugin::Server { compress, .. } => compress,
+        shared::settings::PhysicsPlugin::Default => None,
     };
 
     if let Some(_) = settings.tracing_level {
         let (chrome_layer, _guard) = ChromeLayerBuilder::new().build();
         tracing_subscriber::registry().with(chrome_layer).init();
     }
-
-    let srv = std::net::TcpListener::bind("0.0.0.0:4001".parse::<SocketAddrV4>().unwrap()).unwrap();
-
-    run_physics_server(&srv, compress);
-
-    debug!("Server is finished, terminating");
-}
-
-fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) {
-    let (tcp_stream, _) = srv
-        .accept()
-        .unwrap();
 
     let _span = info_span!("client_connected", name = "physics_server").entered();
 
@@ -89,7 +87,7 @@ fn run_physics_server(srv: &std::net::TcpListener, compress: Option<u32>) {
                         let handle = context.bodies.insert(rb);
 
                         context.entity2body.insert(entity, handle);
-                        //context.last_body_transform_set.insert(handle, *rb.);
+                        //context.last_body_transform_set.insert(handle, bevy_transform::prelude::GlobalTransform::IDENTITY);
                         response.rigid_body_handles.push((entity.to_bits(), handle));
                     }
 

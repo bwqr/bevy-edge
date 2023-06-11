@@ -46,7 +46,7 @@ bevy_utils = { path = "../../bevy/crates/bevy_utils", default-features = false }
 bevy_core_pipeline = { path = "../../bevy/crates/bevy_core_pipeline", default-features = false }
 bevy_scene = { path = "../../bevy/crates/bevy_scene", default-features = false }
 bevy_hierarchy = { path = "../../bevy/crates/bevy_hierarchy", default-features = false }
-bevy_rapier3d = { path = "../../bevy_rapier/bevy_rapier3d", features = ["dim3"] }
+bevy_rapier3d = { path = "../../bevy_rapier/bevy_rapier3d", features = ["dim3", "debug-render-3d"] }
 
 [dependencies]
 shared = { path = "./shared" }
