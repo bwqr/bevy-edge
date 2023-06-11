@@ -26,27 +26,27 @@ serde = { version = "1.0.159", features = ["derive"] }
 flate2 = "1.0.25"
 env_logger = "0.10.0"
 
-bevy_core = { path = "../../bevy/crates/bevy_core", default-features = false }
-bevy_input = { path = "../../bevy/crates/bevy_input", features = ["serialize"] }
-bevy_app = { path = "../../bevy/crates/bevy_app", default-features = false }
-bevy_asset = { path = "../../bevy/crates/bevy_asset", default-features = false, features = ["default"] }
-bevy_render = { path = "../../bevy/crates/bevy_render", default-features = false }
-bevy_window = { path = "../../bevy/crates/bevy_window", default-features = false }
-bevy_time = { path = "../../bevy/crates/bevy_time", default-features = false }
-bevy_winit = { path = "../../bevy/crates/bevy_winit", default-features = false, features = ["wayland"] }
-bevy_log = { path = "../../bevy/crates/bevy_log", default-features = false }
-bevy_ecs = { path = "../../bevy/crates/bevy_ecs", default-features = false }
-bevy_pbr = { path = "../../bevy/crates/bevy_pbr", default-features = false }
-bevy_transform = { path = "../../bevy/crates/bevy_transform", default-features = false  }
-bevy_sprite = { path = "../../bevy/crates/bevy_sprite", default-features = false  }
-bevy_ui = { path = "../../bevy/crates/bevy_ui", default-features = false }
-bevy_derive = { path = "../../bevy/crates/bevy_derive", default-features = false }
-bevy_math = { path = "../../bevy/crates/bevy_math", default-features = false }
-bevy_utils = { path = "../../bevy/crates/bevy_utils", default-features = false }
-bevy_core_pipeline = { path = "../../bevy/crates/bevy_core_pipeline", default-features = false }
-bevy_scene = { path = "../../bevy/crates/bevy_scene", default-features = false }
-bevy_hierarchy = { path = "../../bevy/crates/bevy_hierarchy", default-features = false }
-bevy_rapier3d = { path = "../../bevy_rapier/bevy_rapier3d", features = ["dim3", "debug-render-3d"] }
+bevy_core = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_input = { git = "https://github.com/bwqr/bevy", branch = "edge", features = ["serialize"] }
+bevy_app = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_asset = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false, features = ["default"] }
+bevy_render = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_window = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_time = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_winit = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false, features = ["wayland"] }
+bevy_log = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_ecs = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_pbr = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_transform = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false  }
+bevy_sprite = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false  }
+bevy_ui = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_derive = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_math = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_utils = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_core_pipeline = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_scene = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_hierarchy = { git = "https://github.com/bwqr/bevy", branch = "edge", default-features = false }
+bevy_rapier3d = { git = "https://github.com/bwqr/bevy_rapier", branch = "edge", features = ["dim3", "debug-render-3d"] }
 
 [dependencies]
 shared = { path = "./shared" }
