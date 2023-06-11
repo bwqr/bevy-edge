@@ -1,11 +1,12 @@
 use std::{net::SocketAddrV4, io::Write};
 
 use bevy_app::{Plugin, CoreStage};
-use bevy_ecs::{system::Res, prelude::EventWriter};
+use bevy_ecs::{system::{Res, Resource}, prelude::EventWriter};
 use bevy_input::{prelude::KeyCode, ButtonState, keyboard::KeyboardInput};
 use bevy_log::prelude::*;
 use crossbeam::channel::{Receiver, bounded, Sender};
 
+#[derive(Resource)]
 struct InputChannel(Receiver<Vec<KeyboardInput>>);
 
 pub struct InputPlugin;
@@ -49,7 +50,7 @@ fn run_input_server(tx: &Sender<Vec<KeyboardInput>>, srv: &std::net::TcpListener
     debug!("a client is connected to input server");
 
     loop {
-        let span = debug_span!("read_remote", name = "read_remote").entered();
+        let span = info_span!("read_remote", name = "read_remote").entered();
 
         stream.write(&[0])
             .map_err(|e| format!("could not send sync message, {e:?}"))?;

@@ -1,0 +1,18 @@
+(
+    tracing_level: None,
+    headless: true,
+//    physics_plugin: Default,
+    physics_plugin: Server(
+        compress: Some(1),
+        address: "192.168.1.240:4001",
+    ),
+    bench_length: 60.0,
+    scene: (
+        camera: (0.0,10.0,30.0),
+        num_object: 2000,
+        shape: "ball",
+        restitution: 1.1,
+        room: Closed,
+        ccd: false,
+    )
+)

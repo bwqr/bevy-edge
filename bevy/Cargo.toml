@@ -3,7 +3,9 @@ members = [
   "android",
   "input",
   "ios",
+  "physics",
   "stdin",
+  "shared",
 ]
 
 [package]
@@ -14,37 +16,74 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace.dependencies]
-bincode = "1.3.3"
+bincode = { version = "2.0.0-rc.3", features = ["serde"] }
 console = "0.15.2"
 log = "0.4.17"
 once_cell = "1.15.0"
-bevy_input = { path = "../../bevy/crates/bevy_input", features = ["serialize"] }
+crossbeam = "0.8.2"
+ron = "0.8.0"
+serde = { version = "1.0.159", features = ["derive"] }
+flate2 = "1.0.25"
+env_logger = "0.10.0"
 
-[dependencies]
 bevy_core = { path = "../../bevy/crates/bevy_core", default-features = false }
-bevy_log = { path = "../../bevy/crates/bevy_log", default-features = false, features = ["trace", "tracing-chrome"] }
-bevy_audio = { path = "../../bevy/crates/bevy_audio", default-features = false, features = ["vorbis"] }
-bevy_app = { path = "../../bevy/crates/bevy_app", default-features = false, features = ["trace"] }
+bevy_input = { path = "../../bevy/crates/bevy_input", features = ["serialize"] }
+bevy_app = { path = "../../bevy/crates/bevy_app", default-features = false }
 bevy_asset = { path = "../../bevy/crates/bevy_asset", default-features = false, features = ["default"] }
-bevy_text = { path = "../../bevy/crates/bevy_text", default-features = false }
-bevy_transform = { path = "../../bevy/crates/bevy_transform", default-features = false  }
-bevy_time = { path = "../../bevy/crates/bevy_time", default-features = false }
+bevy_render = { path = "../../bevy/crates/bevy_render", default-features = false }
 bevy_window = { path = "../../bevy/crates/bevy_window", default-features = false }
+bevy_time = { path = "../../bevy/crates/bevy_time", default-features = false }
+bevy_winit = { path = "../../bevy/crates/bevy_winit", default-features = false, features = ["wayland"] }
+bevy_log = { path = "../../bevy/crates/bevy_log", default-features = false }
+bevy_ecs = { path = "../../bevy/crates/bevy_ecs", default-features = false }
+bevy_pbr = { path = "../../bevy/crates/bevy_pbr", default-features = false }
+bevy_transform = { path = "../../bevy/crates/bevy_transform", default-features = false  }
 bevy_sprite = { path = "../../bevy/crates/bevy_sprite", default-features = false  }
 bevy_ui = { path = "../../bevy/crates/bevy_ui", default-features = false }
 bevy_derive = { path = "../../bevy/crates/bevy_derive", default-features = false }
 bevy_math = { path = "../../bevy/crates/bevy_math", default-features = false }
 bevy_utils = { path = "../../bevy/crates/bevy_utils", default-features = false }
-bevy_core_pipeline = { path = "../../bevy/crates/bevy_core_pipeline", default-features = false, features = ["trace"] }
-bevy_render = { path = "../../bevy/crates/bevy_render", default-features = false, features = ["trace"] }
-bevy_winit = { path = "../../bevy/crates/bevy_winit", default-features = false, features = ["wayland"] }
-bevy_ecs = { path = "../../bevy/crates/bevy_ecs", default-features = false, features = ["trace"] }
+bevy_core_pipeline = { path = "../../bevy/crates/bevy_core_pipeline", default-features = false }
+bevy_scene = { path = "../../bevy/crates/bevy_scene", default-features = false }
+bevy_hierarchy = { path = "../../bevy/crates/bevy_hierarchy", default-features = false }
+bevy_rapier3d = { path = "../../bevy_rapier/bevy_rapier3d", features = ["dim3", "debug-render-3d"] }
+
+[dependencies]
+shared = { path = "./shared" }
+
+bevy_core.workspace = true
+bevy_app = { workspace = true, features = ["trace"] }
+bevy_asset.workspace = true
+bevy_transform.workspace = true
+bevy_time.workspace = true
+bevy_window.workspace = true
+bevy_log = { workspace = true, features = ["tracing-tracy"] }
+bevy_sprite.workspace = true
+bevy_ui.workspace = true
+bevy_derive.workspace = true
+bevy_math.workspace = true
+bevy_utils.workspace = true
+bevy_core_pipeline.workspace = true
+bevy_render = { workspace = true, features = ["trace"] }
+bevy_winit.workspace = true
+bevy_ecs = { workspace = true } #features = ["trace"]
+bevy_pbr.workspace = true
 bevy_input.workspace = true
+bevy_rapier3d.workspace = true
+bevy_scene.workspace = true
+bevy_hierarchy.workspace = true
 
-crossbeam = "0.8.2"
-
+crossbeam.workspace = true
 bincode.workspace = true
-console.workspace = true
+env_logger.workspace = true
+log.workspace = true
+ron.workspace = true
+serde.workspace = true
+
+[profile.dev]
+opt-level = "z"
+debug = false
+debug-assertions = false
 
 [profile.release]
-lto = true
+# lto = true
